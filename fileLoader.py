@@ -45,8 +45,6 @@ def loadFile(file_name, path=None):
 
 
 
-def sliceData(name,start_time,end_time):
-    sliced = name.date_time[start_date:end_date]
-    return sliced
+
 
 
