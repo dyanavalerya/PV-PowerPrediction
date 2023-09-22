@@ -24,12 +24,25 @@ data = pd.read_csv(file_path)
 
 # station1=loadData(... , station1)
 # station2=loadData(... , station2)
-
+ 
 # plt.plot(station1['date_time'], station1['power'])
 # plt.plot(station2['date_time'], station2['power'])
 
 
 print(data.head())
+
+print(data.date_time)
+print(type('2018-06-30 16:00:00'))
+
+
+def sliceData(name,start_time,end_time):
+    name.set_index('date_time', inplace=True)
+    sliced = name.loc[start_time:end_time]
+    return sliced
+
+dataSliced=sliceData(data,'2018-06-30 16:00:00','2018-06-30 17:00:00')
+print(dataSliced)
+
     
 # Do a simple plot of date_time vs power
 # Slice the data to a specific time period from the date_time column
