@@ -1,41 +1,28 @@
 #Simple example of how to read and plot data from the PVO dataset
-import sys, os
-import pandas as pd
+# Import libraries
 import matplotlib.pyplot as plt
-
+# Import file handler functions
+import fileLoader
+# Import plotting functions
+import plotFunctions as pf
 
 #Start by listing data files in PVO dataset
-#Use path relative to this file
-path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'dataset/'))
-
-# list files in
-files = os.listdir(path)
-for file_name in files:
-    print(file_name)
-
-#Read one file
-file = "station01.csv"
-file_path = os.path.join(path, file)
-# check that the file exists
-if not (os.path.isfile(file_path)):
-    print("File does not exist")
-    sys.exit()
-data = pd.read_csv(file_path)
-
-# station1=loadData(... , station1)
-# station2=loadData(... , station2)
-
-# plt.plot(station1['date_time'], station1['power'])
-# plt.plot(station2['date_time'], station2['power'])
 
 
-print(data.head())
+# EXAMPLE 
+try:
+    station02 = fileLoader.loadFile("station02.csv", r'C:\Users\andre\OneDrive - Aalborg Universitet\_Universitet\ES7\_ES7 project\literatureAndDataset\dataset')
+except:
     
-# Do a simple plot of date_time vs power
-# Slice the data to a specific time period from the date_time column
 
-import plotFunctions as pf
+
+
+print(station02.head())
+    
+# Create a figure to plot on, 2 axes in 1 column
 [fig,ax]=plt.subplots(2,1)
+# access the first axis by ax[0] and the second by ax[1]
+
 #pf.plotTimeSeries(ax[0],data,"power","power")
 pf.plotColumnScatter(ax[1],data,"power","lmd_windspeed","power vs windspeed")
 pf.plotHistogram(ax[0],data,"power","power")
