@@ -11,12 +11,10 @@ def loadFile(file_name, path=None):
     print(datafolder_path)
     # list files in folder
     # check if folder exists if not error
-    if os.path.isfile(os.listdir(datafolder_path)):
-        files_list = os.listdir(datafolder_path)
-    else:
+    if not (os.path.isdir(datafolder_path)):
         print("Data folder path does not exist")
         sys.exit()
-    
+    files_list = os.listdir(datafolder_path)
     for i in files_list:
         print(i)
     
@@ -36,6 +34,15 @@ def loadFile(file_name, path=None):
 # station02 = loadFile("station02.csv", r'C:\Users\andre\OneDrive - Aalborg Universitet\_Universitet\ES7\_ES7 project\literatureAndDataset\dataset')
 
 # print(station02.keys())
+
+
+def sliceData(name,start_time,end_time):
+    name2=name.set_index('date_time', inplace=False)
+    #add the date_time column to the name2 dataframe
+    name2['date_time']=name['date_time']
+    #set the date_time column as the index
+    sliced = name2.loc[start_time:end_time]
+    return sliced
 
 
 
