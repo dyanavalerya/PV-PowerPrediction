@@ -10,7 +10,13 @@ def loadFile(file_name, path=None):
         datafolder_path = path
     print(datafolder_path)
     # list files in folder
-    files_list = os.listdir(datafolder_path)
+    # check if folder exists if not error
+    if os.path.isfile(os.listdir(datafolder_path)):
+        files_list = os.listdir(datafolder_path)
+    else:
+        print("Data folder path does not exist")
+        sys.exit()
+    
     for i in files_list:
         print(i)
     
@@ -27,9 +33,9 @@ def loadFile(file_name, path=None):
 
     return file_data
 
-station02 = loadFile("station02.csv", r'C:\Users\andre\OneDrive - Aalborg Universitet\_Universitet\ES7\_ES7 project\literatureAndDataset\dataset')
+# station02 = loadFile("station02.csv", r'C:\Users\andre\OneDrive - Aalborg Universitet\_Universitet\ES7\_ES7 project\literatureAndDataset\dataset')
 
-print(station02.keys())
+# print(station02.keys())
 
 
 
