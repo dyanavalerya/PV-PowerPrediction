@@ -25,7 +25,7 @@ def plotColumnScatter(ax :plt.axes ,data : pd.DataFrame,colloum1Name : str,collo
 def plotHistogram(ax :plt.axes ,data : pd.DataFrame,colloumName : str,label: str,binCount=20):
     x = data[colloumName]
     #normalize density for better histogram
-    x.plot.hist(ax=ax,legend=True)
+    x.plot.hist(ax=ax,legend=True,density=True,bins=binCount)
     x.plot.kde(ax=ax,legend=True)
     ax.set_xlabel(colloumName)
     ax.set_ylabel("Frequency")
