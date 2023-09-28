@@ -26,20 +26,13 @@ def loadFile(file_name, path=None):
         sys.exit()
 
     print("\n*** File succesfully loaded ***")
-    # print("Files in dataset folder:")
-    files_list = os.listdir(datafolder_path)
-    for i in files_list:
-        print(i)
-    # print("\nInfo axis of file:")
-    # print(file_data.keys())
     print("\nFile preview:")
     print(file_data.head())
-
     return file_data
 
 def fileInfo(file):
-    time_start = file[1]
-    print(time_start)
+    time_start = file["date_time"][0]
+    print(f"First date_time in dataset is: {time_start}")
 
 
 def sliceData(name,start_time,end_time):
