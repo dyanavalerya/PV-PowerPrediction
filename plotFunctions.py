@@ -56,3 +56,9 @@ def plotHistogram(ax :plt.axes ,data : pd.DataFrame,colloumName : str,label: str
     ax.legend()
     return ax
 
+def correlationMatrixPlotter(ax :plt.axes ,data : pd.DataFrame):
+    import seaborn as sns
+    #drop non float colloums
+    data2 = data.select_dtypes(include=['float64'])
+    ax = sns.heatmap(data2.corr(), ax=ax,annot=True, fmt=".1f")
+    return ax    

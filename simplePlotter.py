@@ -31,4 +31,12 @@ pf.plotTimeSeries(ax[0][0],station02_sliced,"power","power")
 pf.plotColumnScatter2Y(ax[0][1],station02,"power","lmd_windspeed","nwp_temperature","power vs windspeed")
 pf.plotHistogram(ax[1][0],station02,"power","power")
 plt.tight_layout()
+
+fig = plt.figure()
+ax2 = fig.add_subplot(1, 1, 1)
+pf.correlationMatrixPlotter(ax2,station02)
+ax2.set_title("Correlation matrix of dataset")
+
+plt.tight_layout()
+
 plt.show()
