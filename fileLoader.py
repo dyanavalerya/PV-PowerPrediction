@@ -17,10 +17,11 @@ def loadFile(file_name, path=None):
         sys.exit()
     
     file_path = os.path.join(datafolder_path, file_name)
-
+    file_data=None
     # assign data in file
     if (os.path.isfile(file_path)):
-        file_data = pd.read_csv(file_path)
+        file_data = pd.read_csv(file_path,header=0)
+        file_data.index = pd.DatetimeIndex(file_data["date_time"])
     else:
         print("File name does not exist. Remember to include file type in file name")
         sys.exit()
@@ -36,11 +37,9 @@ def fileInfo(file):
 
 
 def sliceData(name,start_time,end_time):
-    name2=name.set_index('date_time', inplace=False)
     #add the date_time column to the name2 dataframe
-    name2['date_time']=name['date_time']
-    #set the date_time column as the index
-    sliced = name2.loc[start_time:end_time]
+   
+    sliced = name[start_time:end_time]
     return sliced
 
 

@@ -23,7 +23,7 @@ fileLoader.fileInfo(station02)
 
 
 # print(station02.head())
-station02_sliced= fileLoader.sliceData(station02,"2018-07-22 16:00:00","2018-09-22 16:00:00")
+station02_sliced= fileLoader.sliceData(station02,"2018-07-22 16:00:00","2018-07-22 19:00:00")
 # Create a figure to plot on, 2 axes in 1 column
 [fig,ax]=plt.subplots(3,1)
 # access the first axis by ax[0] and the second by ax[1]
