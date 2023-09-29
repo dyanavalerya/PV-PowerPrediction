@@ -20,7 +20,15 @@ fileLoader.fileInfo(station02)
 # except:
 #     pass
 
-
+#Check data
+date_fails = np.zeros(10)
+out_and_empty_fails=np.zeros((10, 2))
+for i in range(10):
+    date_fails[i] = fileLoader.checkDate(stations[i])
+    out_and_empty_fails[i]=fileLoader.checkParam(stations[i],8)
+print(date_fails)
+print(np.shape(out_and_empty_fails))
+print(out_and_empty_fails)
 
 # print(station02.head())
 station02_sliced= fileLoader.sliceData(station02,"2018-07-22 16:00:00","2018-07-22 19:00:00")
