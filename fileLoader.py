@@ -45,17 +45,22 @@ def sliceData(name,start_time,end_time):
 
 def checkDate(name):
     datetime_object = pd.to_datetime(name['date_time'])
-
-    date_fails=0
-    for i in range (len(datetime_object)-1):
-        if datetime_object[i+1] != (datetime_object[i]+pd.Timedelta(minutes=15)):
-            print('Mistake in time at index ',i)
-            print('Between ',datetime_object[i],' and ',datetime_object[i+1],'\n')
-            date_fails=date_fails+1
     
-    print('date check done. ',date_fails, 'mistakes found','\n')
-    return
+    date_diff = datetime_object.diff()
 
+    mistake_indices = np.where(date_diff != pd.Timedelta(minutes=15))[0]
+    mistake_indices = mistake_indices[mistake_indices != 0]
+    date_fails = len(mistake_indices)
+
+    if date_fails > 0:
+        print(f'Mistakes found at indices:')
+        for idx in mistake_indices:
+            print(f'Index {idx-1}:{idx} Between {datetime_object.iloc[idx-1]} and {datetime_object.iloc[idx ]}\n')
+    else:
+        print('No mistakes in time found.')
+
+    print(f'date check done. {date_fails} mistakes found\n')
+    return date_fails
         
 def checkParam(name, threshold_outlier):
     print('check for outliers and empty cells with outlier z score threshold=', threshold_outlier, '\n')
@@ -89,9 +94,9 @@ def checkParam(name, threshold_outlier):
         print('Done checking column', j+1, '\n')
     
     print(f'check for outliers and empty cells with outlier z score threshold={threshold_outlier} finished. \n Found {outlier_counter} outliers and {empty_counter} empty cells')
-    return
+    fails=[outlier_counter,empty_counter]
+    return fails
    
-    
 
 
 
