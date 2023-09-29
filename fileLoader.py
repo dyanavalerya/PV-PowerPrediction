@@ -1,5 +1,7 @@
 import sys, os
 import pandas as pd
+import numpy as np
+from scipy.stats import zscore
 
 
 def loadFile(file_name, path=None):
@@ -37,10 +39,64 @@ def fileInfo(file):
 
 
 def sliceData(name,start_time,end_time):
-    #add the date_time column to the name2 dataframe
-   
+    print('data sliced from ',start_time,' to ',end_time)
     sliced = name[start_time:end_time]
     return sliced
+
+def checkDate(name):
+    datetime_object = pd.to_datetime(name['date_time'])
+
+    date_fails=0
+    for i in range (len(datetime_object)-1):
+        if datetime_object[i+1] != (datetime_object[i]+pd.Timedelta(minutes=15)):
+            print('Mistake in time at index ',i)
+            print('Between ',datetime_object[i],' and ',datetime_object[i+1],'\n')
+            date_fails=date_fails+1
+    
+    print('date check done. ',date_fails, 'mistakes found','\n')
+    return
+
+        
+def checkParam(name, threshold_outlier):
+    print('check for outliers and empty cells with outlier z score threshold=', threshold_outlier, '\n')
+    
+    outlier_counter = 0
+    empty_counter = 0
+
+    empty_cells = name.isna()
+
+    for j in range(1,15):  # Loop from 0 to 13 (inclusive)
+        print('Checking column', j+1)
+        data = name.iloc[:, j]  # Extract the column as a NumPy array
+        z_scores = zscore(data)
+
+        outliers = np.abs(z_scores) > threshold_outlier
+        empty = empty_cells.iloc[:, j].to_numpy()
+
+        outlier_indices = np.where(outliers)[0]
+        empty_indices = np.where(empty)[0]
+
+        for i in outlier_indices:
+            print(name.columns[j])
+            print('outlier found at (', j+1, i, ')')
+            outlier_counter += 1
+        
+        for i in empty_indices:
+            print(name.columns[j])
+            print('empty cell at', j+1, i)
+            empty_counter += 1
+        
+        print('Done checking column', j+1, '\n')
+    
+    print(f'check for outliers and empty cells with outlier z score threshold={threshold_outlier} finished. \n Found {outlier_counter} outliers and {empty_counter} empty cells')
+    return
+   
+    
+
+
+
+
+
 
 
 
