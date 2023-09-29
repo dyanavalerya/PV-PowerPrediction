@@ -1,6 +1,9 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
+import os 
+
+
 def plotBase(ax,x,y,label):
     ax.plot(x,y,".",label=label)
     ax.legend()
@@ -62,3 +65,31 @@ def correlationMatrixPlotter(ax :plt.axes ,data : pd.DataFrame):
     data2 = data.select_dtypes(include=['float64'])
     ax = sns.heatmap(data2.corr(), ax=ax,annot=True, fmt=".1f")
     return ax    
+
+def plot_means_and_variances(stats):
+    """
+    Plot the means and variances for each corresponding column.
+    
+    Parameters:
+        stats (pd.DataFrame): DataFrame containing 'DataFrame', 'Column', 'Average', and 'Variance'.
+    """
+    unique_columns = stats['Column'].unique()
+
+    for col in unique_columns:
+        col_stats = stats[stats['Column'] == col]
+        data_frames = col_stats['DataFrame']
+        averages = col_stats['Average']
+        variances = col_stats['Variance']
+
+        plt.figure(figsize=(10, 5))
+        
+        # Scatter plot with DataFrame numbers as legends
+        for i, (variance, average, dataframe) in enumerate(zip(variances, averages, data_frames), 1):
+            plt.scatter(variance, average, label=f'DF {dataframe}', c=f'C{i}', cmap='viridis')
+        
+        plt.xlabel('Variance')
+        plt.ylabel('Mean')
+        plt.title(f'Means vs. Variances for Column {col}')
+        plt.legend(title='DataFrame Number')
+        plt.show()
+
