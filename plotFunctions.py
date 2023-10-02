@@ -62,5 +62,9 @@ def correlationMatrixPlotter(ax :plt.axes ,data : pd.DataFrame):
     data2 = data.select_dtypes(include=['float64'])
     ax = sns.heatmap(data2.corr(), ax=ax,annot=True, fmt=".1f")
     return ax    
-def nyFunktion():
-    print("test")
+
+def nyFunktion(ax :plt.axes ,data : pd.DataFrame):
+    import seaborn as sns
+    data2 = data.select_dtypes(include=['float64'])
+    print(data2.corr())
+
