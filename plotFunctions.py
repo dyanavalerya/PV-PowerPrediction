@@ -2,6 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import os 
+import seaborn as sns
 
 
 def plotBase(ax,x,y,label):
@@ -63,8 +64,7 @@ def plotHistogram(ax :plt.axes ,data : pd.DataFrame,colloumName : str,label: str
     ax.legend()
     return ax
 
-def correlationMatrixPlotter(ax :plt.axes ,data : pd.DataFrame):
-    import seaborn as sns
+def correlationMatrixPlotter(ax :plt.axes ,data : pd.DataFrame):  
     #drop non float colloums
     data2 = data.select_dtypes(include=['float64'])
     ax = sns.heatmap(data2.corr(), ax=ax,annot=True, fmt=".1f")
@@ -98,8 +98,39 @@ def plot_means_and_variances(stats):
         plt.show()
 
 
-def nyFunktion(ax :plt.axes ,data : pd.DataFrame):
-    import seaborn as sns
+def powerHeatMap(ax :plt.axes ,data : pd.DataFrame):
     data2 = data.select_dtypes(include=['float64'])
     print(data2.corr())
 
+
+
+
+def plotPowCorr(data):
+    correlation = np.zeros(7)
+    vectors = []
+    for i in range(len(data)):
+        temp = data[i]
+        temp = temp.select_dtypes(include=['float64'])
+        correlation[0] = temp["power"].corr(temp["nwp_globalirrad"])
+        correlation[1] = temp["power"].corr(temp["nwp_directirrad"])
+        correlation[2] = temp["power"].corr(temp["nwp_temperature"])
+        correlation[3] = temp["power"].corr(temp["nwp_humidity"])
+        correlation[4] = temp["power"].corr(temp["nwp_windspeed"])
+        correlation[5] = temp["power"].corr(temp["nwp_winddirection"])
+        correlation[6] = temp["power"].corr(temp["nwp_pressure"])
+        vectors.append(correlation)
+        correlation = np.zeros(7)
+    powCorrMatrix = np.array(vectors)
+    # labels for x-axis
+    x_axis_labels = ["NWP Globalirrad","NWP Directirrad","NWP Temperature","NWP Humidity","NWP Windspeed","NWP Winddirection","NWP Pressure"] 
+    # labels for y-axis
+    y_axis_labels = ["Station00","Station01","Station02","Station03","Station04","Station05","Station06","Station07","Station08","Station09"] 
+    powCorrMatrix = pd.DataFrame(powCorrMatrix)
+    
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 1, 1)
+
+    ax = sns.heatmap(powCorrMatrix, ax=ax,vmin = -1, vmax = 1, annot=True, xticklabels=x_axis_labels, yticklabels=y_axis_labels)
+    ax.set_title("Correlation matrix of power from each recorded station and the corresponding NWP data")
+    plt.tight_layout()
+  
