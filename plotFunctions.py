@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import os 
 import seaborn as sns
+import numpy as np
 
 
 def plotBase(ax,x,y,label):
