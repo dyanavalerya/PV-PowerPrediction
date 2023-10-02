@@ -105,8 +105,10 @@ def powerHeatMap(ax :plt.axes ,data : pd.DataFrame):
 
 
 
-
 def plotPowCorr(data):
+    """
+    This function plots a heatmap of the correlation between power and NWP data for each power station
+    """
     correlation = np.zeros(7)
     vectors = []
     for i in range(len(data)):

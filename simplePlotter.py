@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 # Import functions
 import fileLoader
 import plotFunctions as pf
+import numpy as np
 
 station00=fileLoader.loadFile("station00.csv")
 station01=fileLoader.loadFile("station01.csv")
@@ -17,9 +18,12 @@ station08=fileLoader.loadFile("station08.csv")
 station09=fileLoader.loadFile("station09.csv")
 station_data = [station00, station01, station02, station03, station04,station05, station06, station07, station08, station09]
 
-stats=fileLoader.calculate_average_and_variance(station_data)
-print(stats)
-pf.plot_means_and_variances(stats)
+
+#stats=fileLoader.calculate_average_and_variance(station_data)
+#print(stats)
+#pf.plot_means_and_variances(stats)
+
+pf.plotPowCorr(station_data)
 
 
 # print(station02.head())
@@ -39,10 +43,10 @@ pf.plot_means_and_variances(stats)
 
 #plt.tight_layout()
 
-<<<<<<< HEAD
+#<<<<<<< HEAD
 
 plt.show()
 
-=======
+#=======
 #plt.show()
->>>>>>> 3158152291a9c78c1e9c13f9df25750b92bf5798
+#>>>>>>> 3158152291a9c78c1e9c13f9df25750b92bf5798
