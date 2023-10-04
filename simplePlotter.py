@@ -32,7 +32,7 @@ pf.plot_means_and_variances(stats)
 #pf.plotHistogram(ax[1][0],station02,"power","power")
 #plt.tight_layout()
 
-#fig = plt.figure()
+#fig = plt.figure() 
 #ax2 = fig.add_subplot(1, 1, 1)
 #pf.correlationMatrixPlotter(ax2,station02)
 #ax2.set_title("Correlation matrix of dataset")
