@@ -19,11 +19,25 @@ station09=fileLoader.loadFile("station09.csv")
 station_data = [station00, station01, station02, station03, station04,station05, station06, station07, station08, station09]
 
 
+
 #stats=fileLoader.calculate_average_and_variance(station_data)
 #print(stats)
 #pf.plot_means_and_variances(stats)
 
-pf.plotPowCorr(station_data)
+#pf.plotPowCorr(station_data)
+"""
+print(station00["nwp_humidity"].corr(station00["nwp_winddirection"]))
+print(station01["nwp_humidity"].corr(station01["nwp_winddirection"]))
+print(station02["nwp_humidity"].corr(station02["nwp_winddirection"]))
+print(station03["nwp_humidity"].corr(station03["nwp_winddirection"]))
+print(station04["nwp_humidity"].corr(station04["nwp_winddirection"]))
+print(station05["nwp_humidity"].corr(station05["nwp_winddirection"]))
+print(station06["nwp_humidity"].corr(station06["nwp_winddirection"]))
+print(station07["nwp_humidity"].corr(station07["nwp_winddirection"]))
+print(station08["nwp_humidity"].corr(station08["nwp_winddirection"]))
+print(station09["nwp_humidity"].corr(station09["nwp_winddirection"]))
+      
+      """
 
 
 # print(station02.head())
@@ -32,16 +46,16 @@ pf.plotPowCorr(station_data)
 #[fig,ax]=plt.subplots(2,2,figsize=(10,10))
 # access the first axis by ax[0] and the second by ax[1]
 #pf.plotTimeSeries(ax[0][0],station02_sliced,"power","power")
-#pf.plotColumnScatter2Y(ax[0][1],station02,"power","lmd_windspeed","nwp_temperature","power vs windspeed")
+#pf.plotColumnScatter2Y(ax[0][1],station02,"power","lmd_windspeed","nwp_humidity","power vs windspeed")
 #pf.plotHistogram(ax[1][0],station02,"power","power")
 #plt.tight_layout()
 
-#fig = plt.figure()
-#ax2 = fig.add_subplot(1, 1, 1)
-#pf.correlationMatrixPlotter(ax2,station02)
-#ax2.set_title("Correlation matrix of dataset")
 
-#plt.tight_layout()
+station06Slice = fileLoader.sliceData(station06,"2019-03-04 16:00:00","2019-04-04 16:00:00")
+
+fig = plt.figure()
+ax2 = fig.add_subplot(1, 1, 1)
+pf.plotColumnScatter(ax2 ,station06Slice,"nwp_temperature","nwp_winddirection","test")
 
 #<<<<<<< HEAD
 
