@@ -96,3 +96,10 @@ def plot_means_and_variances(stats):
         plt.title(f'Means vs. Variances for Column {col}')
         plt.legend(title='DataFrame Number')
         plt.show()
+
+
+def nyFunktion(ax :plt.axes ,data : pd.DataFrame):
+    import seaborn as sns
+    data2 = data.select_dtypes(include=['float64'])
+    print(data2.corr())
+

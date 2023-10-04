@@ -39,4 +39,10 @@ pf.plot_means_and_variances(stats)
 
 #plt.tight_layout()
 
+<<<<<<< HEAD
+
+plt.show()
+
+=======
 #plt.show()
+>>>>>>> 3158152291a9c78c1e9c13f9df25750b92bf5798
