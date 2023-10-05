@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 # Import functions
 import fileLoader
 import plotFunctions as pf
+import numpy as np
 
 station00=fileLoader.loadFile("station00.csv")
 station01=fileLoader.loadFile("station01.csv")
@@ -17,10 +18,7 @@ station08=fileLoader.loadFile("station08.csv")
 station09=fileLoader.loadFile("station09.csv")
 station_data = [station00, station01, station02, station03, station04,station05, station06, station07, station08, station09]
 
-stats=fileLoader.calculate_average_and_variance(station_data)
-print(stats)
-pf.plot_means_and_variances(stats)
-
+pf.nwpError(station_data)
 
 # print(station02.head())
 #station02_sliced= fileLoader.sliceData(station02,"2018-07-22 16:00:00","2018-07-22 19:00:00")
@@ -38,11 +36,3 @@ pf.plot_means_and_variances(stats)
 #ax2.set_title("Correlation matrix of dataset")
 
 #plt.tight_layout()
-
-<<<<<<< HEAD
-
-plt.show()
-
-=======
-#plt.show()
->>>>>>> 3158152291a9c78c1e9c13f9df25750b92bf5798
