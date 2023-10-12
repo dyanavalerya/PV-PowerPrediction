@@ -96,7 +96,31 @@ def checkParam(name, threshold_outlier):
     print(f'check for outliers and empty cells with outlier z score threshold={threshold_outlier} finished. \n Found {outlier_counter} outliers and {empty_counter} empty cells')
     fails=[outlier_counter,empty_counter]
     return fails
-   
+
+def calculate_average_and_variance(dataframes):
+    """
+    Calculate the average and variance of each column (except the first column) 
+    for each DataFrame individually.
+    
+    Parameters:
+        dataframes (list of pd.DataFrame): A list of input DataFrames.
+        
+    Returns:
+        pd.DataFrame: A DataFrame with columns 'DataFrame', 'Column', 'Average', and 'Variance'.
+    """
+    stats = []
+
+    for i, df in enumerate(dataframes):
+        column_stats = df.iloc[:, 1:].agg(['mean', 'var']).T
+        column_stats.columns = ['Average', 'Variance']
+        column_stats['Column'] = column_stats.index
+        column_stats['DataFrame'] = f'DataFrame{i}'
+        stats.append(column_stats)
+
+    return pd.concat(stats, ignore_index=True)
+
+
+
 
 
 
