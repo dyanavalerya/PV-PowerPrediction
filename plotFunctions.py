@@ -173,19 +173,18 @@ def nwpError(data):
     print('pressure NRMSE: ',pressure_NRMSE)
     print('windspeed NRMSE: ',windspeed_NRMSE)
     
-    labels = ['Temperature', 'Global Irradiance', 'Pressure', 'Windspeed']
-    nrmse_values = [temperature_NRMSE, globalirrad_NRMSE, pressure_NRMSE, windspeed_NRMSE]
+    labels = ['Temperature', 'Pressure', 'Windspeed']
+    nrmse_values = [temperature_NRMSE, pressure_NRMSE, windspeed_NRMSE]
 
     plt.figure(figsize=(10, 6))
-    bars = plt.bar(labels, nrmse_values, color=['blue', 'green', 'red', 'purple'])
+    bars = plt.bar(labels, nrmse_values, color=['blue', 'red', 'purple'])
 
     for bar, nrmse_value in zip(bars, nrmse_values):
         yval = bar.get_height()
         plt.text(bar.get_x() + bar.get_width()/2, yval + 0.01, round(nrmse_value, 2), ha='center', va='bottom', color='black', fontsize=10)
 
-    plt.xlabel('Variable')
+    plt.xlabel('Variables')
     plt.ylabel('NRMSE')
-    plt.title('NRMSE of NWP variable compared to actual measured data (LMD)')
+    plt.title('NRMSE for Different Variables')
     plt.show()
-
     return
