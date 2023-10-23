@@ -18,7 +18,7 @@ station08=fileLoader.loadFile("station08.csv")
 station09=fileLoader.loadFile("station09.csv")
 station_data = [station00, station01, station02, station03, station04,station05, station06, station07, station08, station09]
 
-pf.nwpError(station_data)
+pf.nwpError()
 
 # print(station02.head())
 #station02_sliced= fileLoader.sliceData(station02,"2018-07-22 16:00:00","2018-07-22 19:00:00")

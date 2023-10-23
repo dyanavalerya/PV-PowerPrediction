@@ -106,87 +106,72 @@ def nyFunktion(ax :plt.axes ,data : pd.DataFrame):
     data2 = data.select_dtypes(include=['float64'])
     print(data2.corr())
 
-def nwpError(data):
-    windspeed_error_squared=[]
-    windspeed_error_sum=0
-    windspeed_tot=0
-    windspeed_N=0
+def load_all_datasets():
+    import fileLoader as fl
+    """
+    Load all datasets into one. Add a column with the station number.
 
-    pressure_error_squared=[]
-    pressure_error_sum=0
-    pressure_tot=0
-    pressure_N=0
-
-    temperature_error_squared=[]
-    temperature_error_sum=0
-    temperature_tot=0
-    temperature_N=0
-
-    globalirrad_error_squared=[]
-    globalirrad_error_sum=0
-    globalirrad_tot=0
-    globalirrad_N=0
-
-    for i in range(len(data)):
-        windspeed_error_squared.append((data[i].lmd_windspeed-data[i].nwp_windspeed)**2)
-        windspeed_error_sum=np.sum(windspeed_error_squared[i])
-        windspeed_tot=windspeed_tot+np.sum(data[i].lmd_windspeed)
-        windspeed_N=windspeed_N+len(data[i].lmd_windspeed)
-
-        pressure_error_squared.append((data[i].lmd_pressure-data[i].nwp_pressure)**2)
-        pressure_error_sum=np.sum(pressure_error_squared[i])
-        pressure_tot=pressure_tot+np.sum(data[i].lmd_pressure)
-        pressure_N=pressure_N+len(data[i].lmd_pressure)
-
-        temperature_error_squared.append((data[i].lmd_temperature-data[i].nwp_temperature)**2)
-        temperature_error_sum=np.sum(temperature_error_squared[i])
-        temperature_tot=temperature_tot+np.sum(data[i].lmd_temperature)
-        temperature_N=temperature_N+len(data[i].lmd_temperature)
-
-        globalirrad_error_squared.append((data[i].lmd_totalirrad-data[i].nwp_globalirrad)**2)
-        globalirrad_error_sum=np.sum(globalirrad_error_squared[i])
-        globalirrad_tot=globalirrad_tot+np.sum(data[i].lmd_totalirrad)
-        globalirrad_N=globalirrad_N+len(data[i].lmd_totalirrad)
-
+    Returns:
+    all_data (pandas.DataFrame): A pandas dataframe containing all datasets.
+    """
+    meta=fl.loadFile(f"metadata.csv")
+   
+    for i in range(0,9):
+        name=f"station0{i}"
+        loaded_data=fl.loadFile(f"station0{i}.csv")
+        loaded_data["station"] = i
+        for row in meta.iterrows():
+            if row[1]["Station_ID"]==name:
+                loaded_data["power"]=loaded_data["power"]/meta["Capacity"][row[0]]
+        if i == 0:
+            all_data = loaded_data
+            
+        else:
+            all_data = pd.concat([all_data, loaded_data])
     
-    globalirrad_RMSE=np.sqrt(globalirrad_error_sum/globalirrad_N)
-    globalirrad_mean=(globalirrad_tot/globalirrad_N)
-    globalirrad_NRMSE=globalirrad_RMSE/globalirrad_mean
-
-    temperature_RMSE=np.sqrt(temperature_error_sum/temperature_N)
-    temperature_mean=(temperature_tot/temperature_N)
-    temperature_NRMSE=temperature_RMSE/temperature_mean
-
-    pressure_RMSE=np.sqrt(pressure_error_sum/pressure_N)
-    pressure_mean=(pressure_tot/pressure_N)
-    pressure_NRMSE=pressure_RMSE/pressure_mean
-
-    windspeed_RMSE=np.sqrt(windspeed_error_sum/windspeed_N)
-    windspeed_mean=(windspeed_tot/windspeed_N)
-    windspeed_NRMSE=windspeed_RMSE/windspeed_mean
-
-    print('temperature RMSE: ',temperature_RMSE)
-    print('globalirrad RMSE: ',globalirrad_RMSE)
-    print('pressure RMSE: ',pressure_RMSE)
-    print('windspeed RMSE: ',windspeed_RMSE)
-    print()
-    print('temperature NRMSE: ',temperature_NRMSE)
-    print('globalirrad NRMSE: ',globalirrad_NRMSE)
-    print('pressure NRMSE: ',pressure_NRMSE)
-    print('windspeed NRMSE: ',windspeed_NRMSE)
     
-    labels = ['Temperature', 'Pressure', 'Windspeed']
-    nrmse_values = [temperature_NRMSE, pressure_NRMSE, windspeed_NRMSE]
+    return all_data
+
+def nwpError():
+    from sklearn.metrics import mean_squared_error
+
+    data=load_all_datasets()
+
+    MSE_windspeed=mean_squared_error(data.lmd_windspeed,data.nwp_windspeed)
+    RMSE_windspeed=np.sqrt(MSE_windspeed)
+    NRMSE_windspeed=RMSE_windspeed/np.mean(data.lmd_windspeed)
+    print('windspeed NRMSE: ',NRMSE_windspeed)
+
+    MSE_pressure=mean_squared_error(data.lmd_pressure,data.nwp_pressure)
+    RMSE_pressure=np.sqrt(MSE_pressure)
+    NRMSE_pressure=RMSE_pressure/np.mean(data.lmd_pressure)
+    print('pressure NRMSE: ',NRMSE_pressure)
+
+    MSE_temperature=mean_squared_error(data.lmd_temperature,data.nwp_temperature)
+    RMSE_temperature=np.sqrt(MSE_temperature)
+    NRMSE_temperature=RMSE_temperature/np.mean(data.lmd_temperature)
+    print('temperature NRMSE: ',NRMSE_temperature)
+
+    MSE_globalirrad=mean_squared_error(data.lmd_totalirrad,data.nwp_globalirrad)
+    RMSE_globalirrad=np.sqrt(MSE_globalirrad)
+    NRMSE_globalirrad=RMSE_globalirrad/np.mean(data.lmd_totalirrad)
+    print('globalirrad NRMSE: ',NRMSE_globalirrad)
+
+
+    labels = ['Temperature', 'Pressure', 'Wind speed', 'Global Irradiance']  # Updated labels
+    nrmse_values = [NRMSE_temperature, NRMSE_pressure, NRMSE_windspeed, NRMSE_globalirrad]  # Updated NRMSE values
 
     plt.figure(figsize=(10, 6))
-    bars = plt.bar(labels, nrmse_values, color=['blue', 'red', 'purple'])
+    bars = plt.bar(labels, nrmse_values, color=['blue', 'red', 'purple', 'green'])  # Added color for Global Irradiance
 
     for bar, nrmse_value in zip(bars, nrmse_values):
         yval = bar.get_height()
-        plt.text(bar.get_x() + bar.get_width()/2, yval + 0.01, round(nrmse_value, 2), ha='center', va='bottom', color='black', fontsize=10)
+        plt.text(bar.get_x() + bar.get_width()/2, yval + 0.01, round(nrmse_value, 3), ha='center', va='bottom', color='black', fontsize=10)
 
     plt.xlabel('Variables')
     plt.ylabel('NRMSE')
     plt.title('NRMSE for Different Variables')
     plt.show()
+
+    
     return
