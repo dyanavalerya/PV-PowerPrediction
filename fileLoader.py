@@ -23,7 +23,8 @@ def loadFile(file_name, path=None):
     # assign data in file
     if (os.path.isfile(file_path)):
         file_data = pd.read_csv(file_path,header=0)
-        file_data.index = pd.DatetimeIndex(file_data["date_time"])
+        if not(file_name == "metadata.csv"):
+            file_data.index = pd.DatetimeIndex(file_data["date_time"])
     else:
         print("File name does not exist. Remember to include file type in file name")
         sys.exit()

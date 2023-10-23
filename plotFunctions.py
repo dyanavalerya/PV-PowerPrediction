@@ -9,6 +9,7 @@ def plotBase(ax,x,y,label):
     ax.plot(x,y,".",label=label)
     ax.legend()
     
+    
 
 def plotTimeSeries(ax :plt.axes ,data : pd.DataFrame,colloumName : str,label: str ,scaleTicks : float= 2):
     x = data["date_time"]
@@ -31,7 +32,8 @@ def plotColumnScatter(ax :plt.axes ,data : pd.DataFrame,colloum1Name : str,collo
     plotBase(ax,x,y,label)
     ax.set_xlabel(colloum1Name)
     ax.set_ylabel(colloum2Name)
-    ax.legend()
+    #set legend location to upper right
+    ax.legend(loc='upper right')
     return ax
 # plot columnScatter with two y axis's
 def plotColumnScatter2Y(ax :plt.axes ,data : pd.DataFrame,colloumXName : str,colloumY1Name : str,colloumY2Name : str,label: str ,scaleTicks : float= 2):
