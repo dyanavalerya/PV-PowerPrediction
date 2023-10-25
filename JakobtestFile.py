@@ -57,12 +57,28 @@ station_data = [station00, station01, station02, station03, station04, station05
 #print(station00.iloc[1,5:15])
 
 
-sns.set(font_scale=1.3)
+#sns.set(font_scale=1.3)
 
-pf.plotPowCorr(station_data)
+#pf.plotPowCorr(station_data)
 
-#station06sliced = fileLoader.sliceData(station06,"2018-07-13 16:00:00","2018-10-13 16:00:00")
 
+
+temp1 = fileLoader.sliceData(station01,"2018-08-15 23:00:00","2018-08-16 10:00:00")
+temp2 = fileLoader.sliceData(station01,"2018-08-16 23:00:00","2018-08-17 10:00:00")
+temp3= fileLoader.sliceData(station01,"2018-08-17 23:00:00","2018-8-18 10:00:00")
+temp4= fileLoader.sliceData(station01,"2018-08-18 23:00:00","2018-8-19 10:00:00")
+temp5= fileLoader.sliceData(station01,"2018-08-19 23:00:00","2018-8-20 10:00:00")
+temp6 = fileLoader.sliceData(station01,"2018-08-20 23:00:00","2018-8-21 10:00:00")
+temp7= fileLoader.sliceData(station01,"2018-08-21 23:00:00","2018-8-22 10:00:00")
+temp8= fileLoader.sliceData(station01,"2018-08-22 23:00:00","2018-8-23 10:00:00")
+temp9= fileLoader.sliceData(station01,"2018-08-23 23:00:00","2018-8-24 10:00:00")
+temp10= fileLoader.sliceData(station01,"2018-08-24 23:00:00","2018-8-25 10:00:00")
+print(temp1.head)
+print(temp2.head)
+station01 = pd.concat((temp1,temp2,temp3,temp4,temp5,temp6,temp7,temp8,temp9,temp10), axis=0)
+print(station01)
+
+pf.circle3dScatterPlot(station01,"average","Station01")
 
 
 #station00 = station00.loc["nwp_globalirrad"]
@@ -76,67 +92,6 @@ pf.plotPowCorr(station_data)
 
 
 
-"""
-
-fig = plt.figure(figsize=plt.figaspect(0.5))
-ax = fig.add_subplot(1,2,1,projection='3d')
-#pf.correlationMatrixPlotter(ax1,station06)
-#plt.tight_layout()
-
-nwp_winddirection = station00["nwp_winddirection"].to_numpy()
-temperature = station00.iloc[:, 3].to_numpy()
-
-# Initialize arrays to store sums and counts for each angle
-gns_temp = np.zeros(360, dtype=float)
-temp_indeks = np.zeros(360, dtype=int)
-
-for angle in range(360):
-    angle_range = (angle <= nwp_winddirection) & (nwp_winddirection <= angle + 1)
-
-    # Calculate sums and counts for the current angle
-    gns_temp[angle] = np.sum(temperature[angle_range])
-    temp_indeks[angle] = np.sum(angle_range)
-
-# Avoid division by zero and compute the final average
-temp_indeks_nonzero = temp_indeks > 0
-gns_temp[temp_indeks_nonzero] /= temp_indeks[temp_indeks_nonzero]
-
-
-
-x = np.array(list(range(360)) )
-
-W1 = [np.cos(x*np.pi/180), np.sin(x*np.pi/180)]
-ax.scatter(W1[0],W1[1],gns_temp)
-
-ax.set_xlabel('Cosinus')
-ax.set_ylabel('Sinus')
-ax.set_zlabel('average nwp_temperature')
-ax.set_title('Station 00 average temperature compared to wind direction')
-
-ax = fig.add_subplot(1, 2, 2, projection='3d')
-
-nwp_winddirection = station00["nwp_winddirection"].to_numpy()
-power = station00.iloc[:, 14].to_numpy()
-
-# Initialize arrays to store sums and counts for each angle
-gns_power = np.zeros(360, dtype=float)
-power_indeks = np.zeros(360, dtype=int)
-
-for angle in range(360):
-    angle_range = (angle <= nwp_winddirection) & (nwp_winddirection <= angle + 1)
-
-    # Calculate sums and counts for the current angle
-    gns_power[angle] = np.sum(power[angle_range])
-    power_indeks[angle] = np.sum(angle_range)
-
-# Avoid division by zero and compute the final average
-power_indeks_nonzero = power_indeks > 0
-gns_temp[power_indeks_nonzero] /= power_indeks[power_indeks_nonzero]
-
-
-ax.scatter(W1[0],W1[1],gns_power)
-
-"""
 
 #fig = plt.figure()
 #ax2 = fig.add_subplot(1, 1, 1)
