@@ -143,3 +143,53 @@ def plotPowCorr(data):
     ax.set_title("Correlation matrix of power and each recorded feature from the 10 stations", fontsize=20)
     plt.tight_layout()
   
+  
+def circle3dScatterPlot(dataFrame,setting):
+    if setting=="average":
+        fig = plt.figure(figsize=plt.figaspect(0.5))
+        ax = fig.add_subplot(1,1,1,projection='3d')
+
+
+        nwp_winddirection = dataFrame["nwp_winddirection"].to_numpy()
+        power = dataFrame.iloc[:, 14].to_numpy()
+
+        # Initialize arrays to store sums and counts for each angle
+        gns_power = np.zeros(360, dtype=float)
+        power_indeks = np.zeros(360, dtype=int)
+
+        for angle in range(360):
+            angle_range = (angle <= nwp_winddirection) & (nwp_winddirection <= angle + 1)
+
+            # Calculate sums and counts for the current angle
+            gns_power[angle] = np.sum(power[angle_range])
+            power_indeks[angle] = np.sum(angle_range)
+
+        # Avoid division by zero and compute the final average
+        power_indeks_nonzero = power_indeks > 0
+        gns_power[power_indeks_nonzero] /= power_indeks[power_indeks_nonzero]
+
+
+        x = np.array(list(range(360)) )
+
+        W1 = [np.cos(x*np.pi/180), np.sin(x*np.pi/180)]
+        ax.scatter(W1[0],W1[1],gns_power)
+
+        ax.set_xlabel('Cosinus')
+        ax.set_ylabel('Sinus')
+        ax.set_zlabel('average nwp_temperature')
+        ax.set_title('Station 00 average powewr compared to wind direction')
+        
+    elif setting=="individual":
+        ax = fig.add_subplot(1, 1, 1, projection='3d')
+
+        windDirConvert = [np.cos(nwp_winddirection*np.pi/180), np.sin(nwp_winddirection*np.pi/180)]
+
+
+        ax.scatter(windDirConvert[0],windDirConvert[1],power)
+
+        ax.set_xlabel('Cosinus')
+        ax.set_ylabel('Sinus')
+        ax.set_zlabel('average nwp_temperature')
+        ax.set_title('Station 00 average powewr compared to wind direction')
+        plt.xlim(-1, 1)
+        plt.ylim(-1, 1)
