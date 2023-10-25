@@ -144,7 +144,8 @@ def plotPowCorr(data):
     plt.tight_layout()
   
   
-def circle3dScatterPlot(dataFrame,setting):
+def circle3dScatterPlot(dataFrame,setting,namestring):
+    #name  = globals()[dataFrame]
     if setting=="average":
         fig = plt.figure(figsize=plt.figaspect(0.5))
         ax = fig.add_subplot(1,1,1,projection='3d')
@@ -176,8 +177,8 @@ def circle3dScatterPlot(dataFrame,setting):
 
         ax.set_xlabel('Cosinus')
         ax.set_ylabel('Sinus')
-        ax.set_zlabel('average nwp_temperature')
-        ax.set_title('Station 00 average powewr compared to wind direction')
+        ax.set_zlabel('average power [MW]')
+        ax.set_title(namestring + ' average power compared to wind direction')
         
     elif setting=="individual":
         ax = fig.add_subplot(1, 1, 1, projection='3d')
@@ -189,7 +190,7 @@ def circle3dScatterPlot(dataFrame,setting):
 
         ax.set_xlabel('Cosinus')
         ax.set_ylabel('Sinus')
-        ax.set_zlabel('average nwp_temperature')
-        ax.set_title('Station 00 average powewr compared to wind direction')
+        ax.set_zlabel('power [MW]')
+        ax.set_title(namestring + ' average powewr compared to wind direction')
         plt.xlim(-1, 1)
         plt.ylim(-1, 1)
