@@ -10,6 +10,7 @@ def plotBase(ax,x,y,label):
     ax.plot(x,y,".",label=label)
     ax.legend()
     
+    
 
 def plotTimeSeries(ax :plt.axes ,data : pd.DataFrame,colloumName : str,label: str ,scaleTicks : float= 2):
     x = data["date_time"]
@@ -32,7 +33,8 @@ def plotColumnScatter(ax :plt.axes ,data : pd.DataFrame,colloum1Name : str,collo
     plotBase(ax,x,y,label)
     ax.set_xlabel(colloum1Name)
     ax.set_ylabel(colloum2Name)
-    ax.legend()
+    #set legend location to upper right
+    ax.legend(loc='upper right')
     return ax
 # plot columnScatter with two y axis's
 def plotColumnScatter2Y(ax :plt.axes ,data : pd.DataFrame,colloumXName : str,colloumY1Name : str,colloumY2Name : str,label: str ,scaleTicks : float= 2):
@@ -194,3 +196,72 @@ def circle3dScatterPlot(dataFrame,setting,namestring):
         ax.set_title(namestring + ' average powewr compared to wind direction')
         plt.xlim(-1, 1)
         plt.ylim(-1, 1)
+def load_all_datasets():
+    import fileLoader as fl
+    """
+    Load all datasets into one. Add a column with the station number.
+
+    Returns:
+    all_data (pandas.DataFrame): A pandas dataframe containing all datasets.
+    """
+    meta=fl.loadFile(f"metadata.csv")
+   
+    for i in range(0,9):
+        name=f"station0{i}"
+        loaded_data=fl.loadFile(f"station0{i}.csv")
+        loaded_data["station"] = i
+        for row in meta.iterrows():
+            if row[1]["Station_ID"]==name:
+                loaded_data["power"]=loaded_data["power"]/meta["Capacity"][row[0]]
+        if i == 0:
+            all_data = loaded_data
+            
+        else:
+            all_data = pd.concat([all_data, loaded_data])
+    
+    
+    return all_data
+
+def nwpError():
+    from sklearn.metrics import mean_squared_error
+
+    data=load_all_datasets()
+
+    MSE_windspeed=mean_squared_error(data.lmd_windspeed,data.nwp_windspeed)
+    RMSE_windspeed=np.sqrt(MSE_windspeed)
+    NRMSE_windspeed=RMSE_windspeed/np.msean(data.lmd_windspeed)
+    print('windspeed NRMSE: ',NRMSE_windspeed)
+
+    MSE_pressure=mean_squared_error(data.lmd_pressure,data.nwp_pressure)
+    RMSE_pressure=np.sqrt(MSE_pressure)
+    NRMSE_pressure=RMSE_pressure/np.mean(data.lmd_pressure)
+    print('pressure NRMSE: ',NRMSE_pressure)
+
+    MSE_temperature=mean_squared_error(data.lmd_temperature,data.nwp_temperature)
+    RMSE_temperature=np.sqrt(MSE_temperature)
+    NRMSE_temperature=RMSE_temperature/np.mean(data.lmd_temperature)
+    print('temperature NRMSE: ',NRMSE_temperature)
+
+    MSE_globalirrad=mean_squared_error(data.lmd_totalirrad,data.nwp_globalirrad)
+    RMSE_globalirrad=np.sqrt(MSE_globalirrad)
+    NRMSE_globalirrad=RMSE_globalirrad/np.mean(data.lmd_totalirrad)
+    print('globalirrad NRMSE: ',NRMSE_globalirrad)
+
+
+    labels = ['Temperature', 'Pressure', 'Wind speed', 'Global Irradiance']  # Updated labels
+    nrmse_values = [NRMSE_temperature, NRMSE_pressure, NRMSE_windspeed, NRMSE_globalirrad]  # Updated NRMSE values
+
+    plt.figure(figsize=(10, 6))
+    bars = plt.bar(labels, nrmse_values, color=['blue', 'red', 'purple', 'green'])  # Added color for Global Irradiance
+
+    for bar, nrmse_value in zip(bars, nrmse_values):
+        yval = bar.get_height()
+        plt.text(bar.get_x() + bar.get_width()/2, yval + 0.01, round(nrmse_value, 3), ha='center', va='bottom', color='black', fontsize=10)
+
+    plt.xlabel('Variables')
+    plt.ylabel('NRMSE')
+    plt.title('NRMSE for Different Variables')
+    plt.show()
+
+    
+    return

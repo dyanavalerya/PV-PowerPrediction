@@ -18,27 +18,7 @@ station08=fileLoader.loadFile("station08.csv")
 station09=fileLoader.loadFile("station09.csv")
 station_data = [station00, station01, station02, station03, station04,station05, station06, station07, station08, station09]
 
-
-
-#stats=fileLoader.calculate_average_and_variance(station_data)
-#print(stats)
-#pf.plot_means_and_variances(stats)
-
-#pf.plotPowCorr(station_data)
-"""
-print(station00["nwp_humidity"].corr(station00["nwp_winddirection"]))
-print(station01["nwp_humidity"].corr(station01["nwp_winddirection"]))
-print(station02["nwp_humidity"].corr(station02["nwp_winddirection"]))
-print(station03["nwp_humidity"].corr(station03["nwp_winddirection"]))
-print(station04["nwp_humidity"].corr(station04["nwp_winddirection"]))
-print(station05["nwp_humidity"].corr(station05["nwp_winddirection"]))
-print(station06["nwp_humidity"].corr(station06["nwp_winddirection"]))
-print(station07["nwp_humidity"].corr(station07["nwp_winddirection"]))
-print(station08["nwp_humidity"].corr(station08["nwp_winddirection"]))
-print(station09["nwp_humidity"].corr(station09["nwp_winddirection"]))
-      
-      """
-
+pf.nwpError()
 
 # print(station02.head())
 #station02_sliced= fileLoader.sliceData(station02,"2018-07-22 16:00:00","2018-07-22 19:00:00")
@@ -50,17 +30,9 @@ print(station09["nwp_humidity"].corr(station09["nwp_winddirection"]))
 #pf.plotHistogram(ax[1][0],station02,"power","power")
 #plt.tight_layout()
 
+#fig = plt.figure() 
+#ax2 = fig.add_subplot(1, 1, 1)
+#pf.correlationMatrixPlotter(ax2,station02)
+#ax2.set_title("Correlation matrix of dataset")
 
-station06Slice = fileLoader.sliceData(station06,"2019-03-04 16:00:00","2019-04-04 16:00:00")
-
-fig = plt.figure()
-ax2 = fig.add_subplot(1, 1, 1)
-pf.plotColumnScatter(ax2 ,station06Slice,"nwp_temperature","nwp_winddirection","test")
-
-#<<<<<<< HEAD
-
-plt.show()
-
-#=======
-#plt.show()
-#>>>>>>> 3158152291a9c78c1e9c13f9df25750b92bf5798
+#plt.tight_layout()
