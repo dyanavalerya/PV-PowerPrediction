@@ -2,6 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import os 
+import seaborn as sns
 import numpy as np
 
 
@@ -66,8 +67,7 @@ def plotHistogram(ax :plt.axes ,data : pd.DataFrame,colloumName : str,label: str
     ax.legend()
     return ax
 
-def correlationMatrixPlotter(ax :plt.axes ,data : pd.DataFrame):
-    import seaborn as sns
+def correlationMatrixPlotter(ax :plt.axes ,data : pd.DataFrame):  
     #drop non float colloums
     data2 = data.select_dtypes(include=['float64'])
     ax = sns.heatmap(data2.corr(), ax=ax,annot=True, fmt=".1f")
@@ -101,11 +101,109 @@ def plot_means_and_variances(stats):
         plt.show()
 
 
-def nyFunktion(ax :plt.axes ,data : pd.DataFrame):
-    import seaborn as sns
+def powerHeatMap(ax :plt.axes ,data : pd.DataFrame):
     data2 = data.select_dtypes(include=['float64'])
     print(data2.corr())
 
+
+
+def plotPowCorr(data):
+    """
+    This function plots a heatmap of the correlation between power and NWP data for each power station
+    """
+    correlation = np.zeros(13)
+    vectors = []
+    for i in range(len(data)):
+        temp = data[i]
+        #temp = temp.select_dtypes(include=['float64'])
+        correlation[0] = temp["power"].corr(temp["nwp_globalirrad"])
+        correlation[1] = temp["power"].corr(temp["nwp_directirrad"])
+        correlation[2] = temp["power"].corr(temp["nwp_temperature"])
+        correlation[3] = temp["power"].corr(temp["nwp_humidity"])
+        correlation[4] = temp["power"].corr(temp["nwp_windspeed"])
+        correlation[5] = temp["power"].corr(temp["nwp_winddirection"])
+        correlation[6] = temp["power"].corr(temp["nwp_pressure"])
+        correlation[7] = temp["power"].corr(temp["lmd_totalirrad"])
+        correlation[8] = temp["power"].corr(temp["lmd_diffuseirrad"])
+        correlation[9] = temp["power"].corr(temp["lmd_temperature"])
+        correlation[10] = temp["power"].corr(temp["lmd_pressure"])
+        correlation[11] = temp["power"].corr(temp["lmd_winddirection"])
+        correlation[12] = temp["power"].corr(temp["lmd_windspeed"])
+        vectors.append(correlation)
+        correlation = np.zeros(13)
+    powCorrMatrix = np.array(vectors)
+    # labels for x-axis
+    x_axis_labels = ["NWP Globalirrad","NWP Directirrad","NWP Temperature","NWP Humidity","NWP Windspeed","NWP Winddirection","NWP Pressure", "LMD Totalirrad", "LMD Diffuseirrad", "LMD Temperature", "LMD Pressure", "LMD Winddirection", "LMD Windspeed"] 
+    # labels for y-axis
+    y_axis_labels = ["Station00","Station01","Station02","Station03","Station04","Station05","Station06","Station07","Station08","Station09"] 
+    powCorrMatrix = pd.DataFrame(powCorrMatrix)
+    
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 1, 1)
+
+    ax = sns.heatmap(powCorrMatrix, ax=ax,vmin = -1, vmax = 1, annot=True, xticklabels=x_axis_labels, yticklabels=y_axis_labels, fmt=".2f")
+    ax.set_title("Correlation matrix of power and each recorded feature from the 10 stations", fontsize=20)
+    plt.tight_layout()
+  
+  
+def circle3dScatterPlot(dataFrame,setting,namestring):
+    """
+    This functions makes a scatter plot in 3d of 
+    the wind drection converted intro sin an cos values
+    It can either be set to plot the "average" of 
+    measured power in 1 degrees intervals or plot the
+    "individual" points of data
+    """
+    #name  = globals()[dataFrame]
+    if setting=="average":
+        fig = plt.figure(figsize=plt.figaspect(0.5))
+        ax = fig.add_subplot(1,1,1,projection='3d')
+
+
+        nwp_winddirection = dataFrame["nwp_winddirection"].to_numpy()
+        power = dataFrame.iloc[:, 14].to_numpy()
+
+        # Initialize arrays to store sums and counts for each angle
+        gns_power = np.zeros(360, dtype=float)
+        power_indeks = np.zeros(360, dtype=int)
+
+        for angle in range(360):
+            angle_range = (angle <= nwp_winddirection) & (nwp_winddirection <= angle + 1)
+
+            # Calculate sums and counts for the current angle
+            gns_power[angle] = np.sum(power[angle_range])
+            power_indeks[angle] = np.sum(angle_range)
+
+        # Avoid division by zero and compute the final average
+        power_indeks_nonzero = power_indeks > 0
+        gns_power[power_indeks_nonzero] /= power_indeks[power_indeks_nonzero]
+
+
+        x = np.array(list(range(360)) )
+
+        W1 = [np.cos(x*np.pi/180), np.sin(x*np.pi/180)]
+        ax.scatter(W1[0],W1[1],gns_power)
+
+        ax.set_xlabel('Cosinus')
+        ax.set_ylabel('Sinus')
+        ax.set_zlabel('average power [MW]')
+        ax.set_title(namestring + ' average power compared to wind direction')
+        
+    elif setting=="individual":
+        ax = fig.add_subplot(1, 1, 1, projection='3d')
+
+        windDirConvert = [np.cos(nwp_winddirection*np.pi/180), np.sin(nwp_winddirection*np.pi/180)]
+
+
+        ax.scatter(windDirConvert[0],windDirConvert[1],power)
+
+        ax.set_xlabel('Cosinus')
+        ax.set_ylabel('Sinus')
+        ax.set_zlabel('power [MW]')
+        ax.set_title(namestring + ' average powewr compared to wind direction')
+        plt.xlim(-1, 1)
+        plt.ylim(-1, 1)
+        
 def load_all_datasets():
     import fileLoader as fl
     """
@@ -139,7 +237,7 @@ def nwpError():
 
     MSE_windspeed=mean_squared_error(data.lmd_windspeed,data.nwp_windspeed)
     RMSE_windspeed=np.sqrt(MSE_windspeed)
-    NRMSE_windspeed=RMSE_windspeed/np.mean(data.lmd_windspeed)
+    NRMSE_windspeed=RMSE_windspeed/np.msean(data.lmd_windspeed)
     print('windspeed NRMSE: ',NRMSE_windspeed)
 
     MSE_pressure=mean_squared_error(data.lmd_pressure,data.nwp_pressure)
