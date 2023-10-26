@@ -147,6 +147,13 @@ def plotPowCorr(data):
   
   
 def circle3dScatterPlot(dataFrame,setting,namestring):
+    """
+    This functions makes a scatter plot in 3d of 
+    the wind drection converted intro sin an cos values
+    It can either be set to plot the "average" of 
+    measured power in 1 degrees intervals or plot the
+    "individual" points of data
+    """
     #name  = globals()[dataFrame]
     if setting=="average":
         fig = plt.figure(figsize=plt.figaspect(0.5))
@@ -196,6 +203,7 @@ def circle3dScatterPlot(dataFrame,setting,namestring):
         ax.set_title(namestring + ' average powewr compared to wind direction')
         plt.xlim(-1, 1)
         plt.ylim(-1, 1)
+        
 def load_all_datasets():
     import fileLoader as fl
     """
