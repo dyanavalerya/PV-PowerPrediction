@@ -26,7 +26,7 @@ pf.nwpError()
 #[fig,ax]=plt.subplots(2,2,figsize=(10,10))
 # access the first axis by ax[0] and the second by ax[1]
 #pf.plotTimeSeries(ax[0][0],station02_sliced,"power","power")
-#pf.plotColumnScatter2Y(ax[0][1],station02,"power","lmd_windspeed","nwp_temperature","power vs windspeed")
+#pf.plotColumnScatter2Y(ax[0][1],station02,"power","lmd_windspeed","nwp_humidity","power vs windspeed")
 #pf.plotHistogram(ax[1][0],station02,"power","power")
 #plt.tight_layout()
 
