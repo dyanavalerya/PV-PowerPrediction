@@ -6,20 +6,12 @@ import fileLoader
 import plotFunctions as pf
 import numpy as np
 
-station00=fileLoader.loadFile("station00.csv")
-station01=fileLoader.loadFile("station01.csv")
-station02=fileLoader.loadFile("station02.csv")
-station03=fileLoader.loadFile("station03.csv")
-station04=fileLoader.loadFile("station04.csv")
-station05=fileLoader.loadFile("station05.csv")
-station06=fileLoader.loadFile("station06.csv")
-station07=fileLoader.loadFile("station07.csv")
-station08=fileLoader.loadFile("station08.csv")
-station09=fileLoader.loadFile("station09.csv")
-station_data = [station00, station01, station02, station03, station04,station05, station06, station07, station08, station09]
 
-pf.nwpError()
+station00=fileLoader.loadFile('station00.csv')
 
+correlations=pf.windDirectionCorrelation(station00)
+print(np.shape(correlations))
+print(correlations)
 # print(station02.head())
 #station02_sliced= fileLoader.sliceData(station02,"2018-07-22 16:00:00","2018-07-22 19:00:00")
 # Create a figure to plot on, 2 axes in 1 column
