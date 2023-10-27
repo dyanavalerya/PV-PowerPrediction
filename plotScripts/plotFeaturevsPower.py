@@ -7,8 +7,8 @@ import sys
 print(f"Setting syspath to include base folder: {os.path.dirname(os.path.dirname(os.path.abspath(__file__)))}") 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # import home made functions
-import fileLoader as fl
-import plotFunctions as pf
+from PV_PredictLib import fileLoader as fl
+from PV_PredictLib import plotFunctions as pf
 import pandas as pd
 import matplotlib.pyplot as plt
 
@@ -47,7 +47,7 @@ def plot_feature_vs_power(all_data,save_path,feature_name):
 # Main function
 def main():
     # Importing data
-    all_data = load_all_datasets()
+    all_data = fl.load_all_datasets()
     print(all_data.head())
     
     all_data=all_data.resample('1H').first()

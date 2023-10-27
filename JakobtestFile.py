@@ -1,5 +1,9 @@
 #Simple example of how to read and plot data from the PVO dataset
 # Import libraries
+import os, sys
+# if file is inside a folder then append base folder to sys.path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# load custom functions
 import matplotlib.pyplot as plt
 import pandas as pd
 import sys, os
@@ -7,8 +11,8 @@ import numpy as np
 import seaborn as sns
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 # Import functions
-import fileLoader
-import plotFunctions as pf
+from PV_PredictLib import fileLoader 
+from PV_PredictLib import plotFunctions as pf
 
 
 

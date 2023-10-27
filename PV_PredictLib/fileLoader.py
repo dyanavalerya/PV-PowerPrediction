@@ -8,6 +8,8 @@ def loadFile(file_name, path=None):
     if path == None:
         print(f"Path of current program:\n", os.path.abspath(os.path.dirname(__file__)))
         datafolder_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'dataset/'))
+        datafolder_path =  os.path.abspath(os.path.dirname(__file__)) + "/../dataset/"
+
     else:
         datafolder_path = path
     
@@ -34,10 +36,34 @@ def loadFile(file_name, path=None):
     print(file_data.head())
     return file_data
 
+def load_all_datasets(path=None):
+    """
+    Load all datasets into one. Add a column with the station number.
+
+    Returns:
+    all_data (pandas.DataFrame): A pandas dataframe containing all datasets.
+    """
+    meta=loadFile(f"metadata.csv",path)
+   
+    for i in range(0,9):
+        name=f"station0{i}"
+        loaded_data=loadFile(f"station0{i}.csv",path)
+        loaded_data["station"] = i
+        for row in meta.iterrows():
+            if row[1]["Station_ID"]==name:
+                loaded_data["power"]=loaded_data["power"]/meta["Capacity"][row[0]]
+        if i == 0:
+            all_data = loaded_data
+            
+        else:
+            all_data = pd.concat([all_data, loaded_data])
+    
+    
+    return all_data
+
 def fileInfo(file):
     time_start = file["date_time"][0]
     print(f"First date_time in dataset is: {time_start}")
-
 
 def sliceData(name,start_time,end_time):
     print('data sliced from ',start_time,' to ',end_time)

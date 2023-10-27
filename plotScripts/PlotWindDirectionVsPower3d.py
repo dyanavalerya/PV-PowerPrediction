@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 print(f"Setting syspath to include base folder: {os.path.dirname(os.path.dirname(os.path.abspath(__file__)))}") 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-import plotFunctions as pf
-import fileLoader
+from PV_PredictLib import fileLoader
+from PV_PredictLib import plotFunctions as pf
 
 station01=fileLoader.loadFile("station00.csv")
 

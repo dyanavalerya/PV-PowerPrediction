@@ -4,14 +4,15 @@ import matplotlib.ticker as ticker
 import os 
 import seaborn as sns
 import numpy as np
+from sklearn.metrics import mean_squared_error
+from PV_PredictLib import fileLoader as fl
+
 
 
 def plotBase(ax,x,y,label):
     ax.plot(x,y,".",label=label)
     ax.legend()
     
-    
-
 def plotTimeSeries(ax :plt.axes ,data : pd.DataFrame,colloumName : str,label: str ,scaleTicks : float= 2):
     x = data["date_time"]
     y = data[colloumName]
@@ -57,6 +58,7 @@ def plotColumnScatter2Y(ax :plt.axes ,data : pd.DataFrame,colloumXName : str,col
     ax2.plot(x,y2,".",label=label,color='C1')
     ax2.set_ylabel(colloumY2Name)
     return ax
+
 def plotHistogram(ax :plt.axes ,data : pd.DataFrame,colloumName : str,label: str,binCount=20):
     x = data[colloumName]
     #normalize density for better histogram
@@ -100,12 +102,9 @@ def plot_means_and_variances(stats):
         plt.legend(title='DataFrame Number')
         plt.show()
 
-
 def powerHeatMap(ax :plt.axes ,data : pd.DataFrame):
     data2 = data.select_dtypes(include=['float64'])
     print(data2.corr())
-
-
 
 def plotPowCorr(data):
     """
@@ -144,7 +143,6 @@ def plotPowCorr(data):
     ax = sns.heatmap(powCorrMatrix, ax=ax,vmin = -1, vmax = 1, annot=True, xticklabels=x_axis_labels, yticklabels=y_axis_labels, fmt=".2f")
     ax.set_title("Correlation matrix of power and each recorded feature from the 10 stations", fontsize=20)
     plt.tight_layout()
-  
   
 def circle3dScatterPlot(dataFrame,setting,namestring):
     """
@@ -204,36 +202,9 @@ def circle3dScatterPlot(dataFrame,setting,namestring):
         plt.xlim(-1, 1)
         plt.ylim(-1, 1)
         
-def load_all_datasets():
-    import fileLoader as fl
-    """
-    Load all datasets into one. Add a column with the station number.
-
-    Returns:
-    all_data (pandas.DataFrame): A pandas dataframe containing all datasets.
-    """
-    meta=fl.loadFile(f"metadata.csv")
-   
-    for i in range(0,9):
-        name=f"station0{i}"
-        loaded_data=fl.loadFile(f"station0{i}.csv")
-        loaded_data["station"] = i
-        for row in meta.iterrows():
-            if row[1]["Station_ID"]==name:
-                loaded_data["power"]=loaded_data["power"]/meta["Capacity"][row[0]]
-        if i == 0:
-            all_data = loaded_data
-            
-        else:
-            all_data = pd.concat([all_data, loaded_data])
-    
-    
-    return all_data
 
 def nwpError():
-    from sklearn.metrics import mean_squared_error
-
-    data=load_all_datasets()
+    data=fl.load_all_datasets()
 
     MSE_windspeed=mean_squared_error(data.lmd_windspeed,data.nwp_windspeed)
     RMSE_windspeed=np.sqrt(MSE_windspeed)
@@ -273,7 +244,6 @@ def nwpError():
 
     
     return
-
 
 def windDirectionCorrelation(data):
     # Extract columns

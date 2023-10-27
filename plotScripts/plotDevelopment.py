@@ -1,9 +1,14 @@
 #Simple example of how to read and plot data from the PVO dataset
+import os
+import sys
+# set syspath to include the base folder
+print(f"Setting syspath to include base folder: {os.path.dirname(os.path.dirname(os.path.abspath(__file__)))}") 
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # Import libraries
 import matplotlib.pyplot as plt
 # Import functions
-import fileLoader
-import plotFunctions as pf
+from PV_PredictLib import fileLoader
+from PV_PredictLib import plotFunctions as pf
 import numpy as np
 
 
