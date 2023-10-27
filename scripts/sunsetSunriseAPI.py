@@ -11,10 +11,9 @@ import requests
 import json
 from datetime import *
 # setting path to dataset folder
-dataset_path =  os.path.abspath(os.path.dirname(__file__)) + "/../dataset/"
 
 # Defining functions
-def load_all_datasets(meta, i):
+def load_and_normalize(meta, i):
     """
     Load data per station. Add a column with the station number.
 
@@ -24,7 +23,7 @@ def load_all_datasets(meta, i):
 
     # i = station number
     name = f"station0{i}"
-    loaded_data = fl.loadFile(f"station0{i}.csv",dataset_path)
+    loaded_data = fl.loadFile(f"station0{i}.csv",path=None,PKL=False)
     loaded_data["station"] = i
     for row in meta.iterrows():
         if row[1]["Station_ID"] == name:
@@ -48,10 +47,10 @@ def sunrisesunset(f, params):
 # Main function
 def main():
     # Importing data
-    meta = fl.loadFile("metadata.csv",dataset_path)
+    meta = fl.loadFile("metadata.csv",path=None,PKL=False)
     # _________________________________ CHANGE STATION NUMBER HERE ! _____________________________________________
-    station_nr = 0
-    station_data = load_all_datasets(meta, station_nr)
+    station_nr = 2
+    station_data = load_and_normalize(meta, station_nr)
 
     f = r"https://api.sunrise-sunset.org/json?"
 

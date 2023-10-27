@@ -5,23 +5,30 @@ import pickle
 from scipy.stats import zscore
 
 
-def loadFile(file_name, path=None):
+def loadFile(file_name, path=None,PKL=True): 
     if path == None:
         print(f"Path of current program:\n", os.path.abspath(os.path.dirname(__file__)))
-        datafolder_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'dataset/'))
-        datafolder_path =  os.path.abspath(os.path.dirname(__file__)) + "/../dataset/"
+        datafolder_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'dataset/CSVFiles/'))
+        # go one folder back to get to the base folder
+        datafolder_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../dataset'))
+        datafolder_path_csv =  datafolder_path+ "/CSVFiles/"
 
     else:
-        datafolder_path = path
-    
+        datafolder_path_csv = path
+    # display a warning if a pkl version exists
+    if PKL:
+        if (os.path.isfile(os.path.join(datafolder_path, file_name[:-4] + ".pkl"))):
+            print("Warning: A pkl version of this file exists. It will be loaded instead of the csv file.")
+            print("If you want to load the csv file, set PKL=False.")
+            return loadPkl(os.path.join(datafolder_path, file_name[:-4] + ".pkl"))
     # check if folder exists if not then error
-    if (os.path.isdir(datafolder_path)):
-        print(f"Path of dataset folder:\n", datafolder_path)
+    if (os.path.isdir(datafolder_path_csv)):
+        print(f"Path of dataset folder:\n", datafolder_path_csv)
     else:
         print("Data folder path does not exist")
         sys.exit()
     
-    file_path = os.path.join(datafolder_path, file_name)
+    file_path = os.path.join(datafolder_path_csv, file_name)
     file_data=None
     # assign data in file
     if (os.path.isfile(file_path)):
