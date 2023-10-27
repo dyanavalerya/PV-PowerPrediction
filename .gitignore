@@ -162,4 +162,3 @@ cython_debug/
 #Local file Jeppe
 jeppe.py
 JakobtestFile.py
-*.pkl
