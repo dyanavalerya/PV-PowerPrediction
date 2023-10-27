@@ -20,7 +20,7 @@ def loadFile(file_name, path=None,PKL=True):
         if (os.path.isfile(os.path.join(datafolder_path, file_name[:-4] + ".pkl"))):
             print("Warning: A pkl version of this file exists. It will be loaded instead of the csv file.")
             print("If you want to load the csv file, set PKL=False.")
-            return loadPkl(os.path.join(datafolder_path, file_name[:-4] + ".pkl"))
+            return loadPkl(file_name[:-4] + ".pkl",path)
     # check if folder exists if not then error
     if (os.path.isdir(datafolder_path_csv)):
         print(f"Path of dataset folder:\n", datafolder_path_csv)
@@ -154,21 +154,14 @@ def calculate_average_and_variance(dataframes):
 
     return pd.concat(stats, ignore_index=True)
 
-def loadPkl(file):
-    tempstr ="dataset/" + file
-    temp = open(tempstr, 'rb')
+def loadPkl(file,path=None):
+    if path==None:
+        path=os.path.abspath(os.path.join(os.path.dirname(__file__), '../dataset'))
+    file_path=os.path.join(path,file)
+    temp = open(file_path, 'rb')
     station = pickle.load(temp)
     temp.close()
     return station
-
-
-
-
-
-
-
-
-
 
 
 
