@@ -110,7 +110,7 @@ def plotPowCorr(data):
     """
     This function plots a heatmap of the correlation between power and NWP data for each power station
     """
-    correlation = np.zeros(13)
+    correlation = np.zeros(11)
     vectors = []
     for i in range(len(data)):
         temp = data[i]
@@ -120,19 +120,17 @@ def plotPowCorr(data):
         correlation[2] = temp["power"].corr(temp["nwp_temperature"])
         correlation[3] = temp["power"].corr(temp["nwp_humidity"])
         correlation[4] = temp["power"].corr(temp["nwp_windspeed"])
-        correlation[5] = temp["power"].corr(temp["nwp_winddirection"])
-        correlation[6] = temp["power"].corr(temp["nwp_pressure"])
-        correlation[7] = temp["power"].corr(temp["lmd_totalirrad"])
-        correlation[8] = temp["power"].corr(temp["lmd_diffuseirrad"])
-        correlation[9] = temp["power"].corr(temp["lmd_temperature"])
-        correlation[10] = temp["power"].corr(temp["lmd_pressure"])
-        correlation[11] = temp["power"].corr(temp["lmd_winddirection"])
-        correlation[12] = temp["power"].corr(temp["lmd_windspeed"])
+        correlation[5] = temp["power"].corr(temp["nwp_pressure"])
+        correlation[6] = temp["power"].corr(temp["lmd_totalirrad"])
+        correlation[7] = temp["power"].corr(temp["lmd_diffuseirrad"])
+        correlation[8] = temp["power"].corr(temp["lmd_temperature"])
+        correlation[9] = temp["power"].corr(temp["lmd_pressure"])
+        correlation[10] = temp["power"].corr(temp["lmd_windspeed"])
         vectors.append(correlation)
-        correlation = np.zeros(13)
+        correlation = np.zeros(11)
     powCorrMatrix = np.array(vectors)
     # labels for x-axis
-    x_axis_labels = ["NWP Globalirrad","NWP Directirrad","NWP Temperature","NWP Humidity","NWP Windspeed","NWP Winddirection","NWP Pressure", "LMD Totalirrad", "LMD Diffuseirrad", "LMD Temperature", "LMD Pressure", "LMD Winddirection", "LMD Windspeed"] 
+    x_axis_labels = ["NWP Globalirrad","NWP Directirrad","NWP Temperature","NWP Humidity","NWP Windspeed","NWP Pressure", "LMD Totalirrad", "LMD Diffuseirrad", "LMD Temperature", "LMD Pressure", "LMD Windspeed"] 
     # labels for y-axis
     y_axis_labels = ["Station00","Station01","Station02","Station03","Station04","Station05","Station06","Station07","Station08","Station09"] 
     powCorrMatrix = pd.DataFrame(powCorrMatrix)
@@ -141,7 +139,7 @@ def plotPowCorr(data):
     ax = fig.add_subplot(1, 1, 1)
 
     ax = sns.heatmap(powCorrMatrix, ax=ax,vmin = -1, vmax = 1, annot=True, xticklabels=x_axis_labels, yticklabels=y_axis_labels, fmt=".2f")
-    ax.set_title("Correlation matrix of power and each recorded feature from the 10 stations", fontsize=20)
+    ax.set_title("Correlation matrix of power and each recorded feature from the 10 stations", fontsize=16)
     plt.tight_layout()
   
 def circle3dScatterPlot(dataFrame,setting,namestring):
