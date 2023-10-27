@@ -10,9 +10,9 @@ def plotIrradiances(data,date1,date2):
     
     st2=fl.sliceData(data,date1,date2)
     fig,ax=plt.subplots(1,1,figsize=(8,6))
-    plt.plot(st2["nwp_directirrad"],alpha=1,  label="nwp_directirrad")
-    plt.plot(st2["hmd_diffuseirrad"],alpha=1, label="hmd_diffuseirrad")
-    plt.plot(st2["nwp_globalirrad"],alpha=1,  label="nwp_globalirrad")
+    pf.plotTimeSeries(ax,st2,"nwp_directirrad","nwp_directirrad",24)
+    pf.plotTimeSeries(ax,st2,"hmd_diffuseirrad","hmd_diffuseirrad",24)
+    pf.plotTimeSeries(ax,st2,"nwp_globalirrad","nwp_globalirrad",24)
     plt.title("Comparison of NWP irradiance ")
     plt.xlabel("Time")
     plt.ylabel("Irradiance [W/m^2]")
@@ -20,17 +20,20 @@ def plotIrradiances(data,date1,date2):
     plt.tight_layout()
     plt.savefig(r"C:\Users\jeppe\OneDrive - Aalborg Universitet\7. Semester Shared Work\Project\Figures\NWP_irradiance_comparison.png",format="png")
     fig,ax=plt.subplots(1,1,figsize=(8,6))
-    plt.plot(st2["hmd_directirrad"],alpha=1,  label="hmd_directirrad")
-    plt.plot(st2["lmd_diffuseirrad"],alpha=1, label="lmd_diffuseirrad")
-    plt.plot(st2["lmd_totalirrad"],alpha=1,  label="lmd_totalirrad")
+    pf.plotTimeSeries(ax,st2,"hmd_directirrad","hmd_directirrad",24)
+    pf.plotTimeSeries(ax,st2,"lmd_diffuseirrad","lmd_diffuseirrad",24)
+    pf.plotTimeSeries(ax,st2,"lmd_totalirrad","lmd_totalirrad",24)
+    
     plt.title("Comparison of LMD irradiance")
     plt.xlabel("Time")
     plt.ylabel("Irradiance [W/m^2]")
     plt.legend(loc="upper right")
     plt.tight_layout()
     plt.savefig(r"C:\Users\jeppe\OneDrive - Aalborg Universitet\7. Semester Shared Work\Project\Figures\LMD_irradiance_comparison.png",format="png")
-
+    plt.show()
 def main():
-    plotIrradiances(fl.loadPkl("station00.pkl"),"2018-07-21 00:00:00","2018-07-30 23:59:59")
+    data=fl.loadPkl("station01.pkl")
+    #sliced_data=fl.sliceData(data,"2018-07-21 00:00:00","2018-07-30 23:59:59")  
+    plotIrradiances(data,"2018-10-21 00:00:00","2018-10-25 23:59:59")
 if __name__ == "__main__":
     main()
