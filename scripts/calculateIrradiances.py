@@ -26,18 +26,21 @@ def calculateIrradiances(data,metadata,stationNum):
     def calculate_lmd(row):
         return ((row["lmd_totalirrad"] - row["lmd_diffuseirrad"])/np.cos(get_zenith_angle(row)))
 
-    data["hmd_diffuseirrad"] = data.apply(calculate_dhi, axis=1)
-    data["hmd_directirrad"] = data.apply(calculate_lmd, axis=1)
+    data["nwp_hmd_diffuseirrad"] = data.apply(calculate_dhi, axis=1)
+    data["lmd_hmd_directirrad"] = data.apply(calculate_lmd, axis=1)
 
     # clean the data
-    data["hmd_directirrad"]=data["hmd_directirrad"].rolling(10).median()
+    data["lmd_hmd_directirrad"]=data["lmd_hmd_directirrad"].rolling(10).median()
     # if value is negative set to last value
-    while(len(data.loc[data["hmd_directirrad"]<0])):
-        data.loc[data["hmd_directirrad"]<0,"hmd_directirrad"]=0
+    while(len(data.loc[data["lmd_hmd_directirrad"]<0])):
+        data.loc[data["lmd_hmd_directirrad"]<0,"lmd_hmd_directirrad"]=0
     # set all nan values to zero
-    data["hmd_directirrad"]=data["hmd_directirrad"].fillna(0)
-    data["hmd_diffuseirrad"]=data["hmd_diffuseirrad"].fillna(0)
-
+    data["lmd_hmd_directirrad"]=data["lmd_hmd_directirrad"].fillna(0)
+    data["nwp_hmd_diffuseirrad"]=data["nwp_hmd_diffuseirrad"].fillna(0)
+    cols = data.columns.tolist()
+    new_cos=sorted(cols)
+    #move the second last to the last
+    new_cos=new_cos[:-2]+new_cos[-1:]+new_cos[-2:-1]
     return data
 
 
@@ -47,7 +50,9 @@ def main():
         print("Loading station",i)
         st_data=fl.loadPkl(f"station0{i}.pkl")
         #if hmd_directirrad key is not in the dataset then calculate it
-        if "hmd_directirrad" in st_data.keys():
+        if 1:
+            # remove hmd_directirrad and hmd_diffuseirrad from the dataset
+            st_data=st_data.drop(columns=["hmd_directirrad","hmd_diffuseirrad"])
             print("Calculating hmd_directirrad")
             st_data=calculateIrradiances(st_data,st_meta,i)
             # Saving station
