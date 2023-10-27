@@ -5,15 +5,16 @@ import pandas as pd
 import sys, os
 import numpy as np
 import seaborn as sns
+import pickle
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 # Import functions
-import fileLoader
+import fileLoader as fl
 import plotFunctions as pf
 
 
 
 
-
+"""
 def loadFile(file_name, path=None):
     if path == None:
         #print(f"Path of current program:\n", os.path.abspath(os.path.dirname(__file__)))
@@ -52,51 +53,20 @@ station08=loadFile("station08.csv")
 station09=loadFile("station09.csv")
 
 station_data = [station00, station01, station02, station03, station04, station05, station06, station07, station08, station09]
+"""
+meta = fl.loadFile("metadata.csv")
+for i in range(8):
+    tempStr =  "dataset/station0" + str(i) + ".pkl"
+    file = open(tempStr, 'rb')
+    station = pickle.load(file)
+    station["power"] = station["power"] * meta["Capacity"][i]
+    station.to_pickle(f"station0{i}.pkl")
 
-
-#print(station00.iloc[1,5:15])
-
-
-#sns.set(font_scale=1.3)
-
-#pf.plotPowCorr(station_data)
-
-
-
-temp1 = fileLoader.sliceData(station01,"2018-08-15 23:00:00","2018-08-16 10:00:00")
-temp2 = fileLoader.sliceData(station01,"2018-08-16 23:00:00","2018-08-17 10:00:00")
-temp3= fileLoader.sliceData(station01,"2018-08-17 23:00:00","2018-8-18 10:00:00")
-temp4= fileLoader.sliceData(station01,"2018-08-18 23:00:00","2018-8-19 10:00:00")
-temp5= fileLoader.sliceData(station01,"2018-08-19 23:00:00","2018-8-20 10:00:00")
-temp6 = fileLoader.sliceData(station01,"2018-08-20 23:00:00","2018-8-21 10:00:00")
-temp7= fileLoader.sliceData(station01,"2018-08-21 23:00:00","2018-8-22 10:00:00")
-temp8= fileLoader.sliceData(station01,"2018-08-22 23:00:00","2018-8-23 10:00:00")
-temp9= fileLoader.sliceData(station01,"2018-08-23 23:00:00","2018-8-24 10:00:00")
-temp10= fileLoader.sliceData(station01,"2018-08-24 23:00:00","2018-8-25 10:00:00")
-print(temp1.head)
-print(temp2.head)
-station01 = pd.concat((temp1,temp2,temp3,temp4,temp5,temp6,temp7,temp8,temp9,temp10), axis=0)
-print(station01)
-
-pf.circle3dScatterPlot(station01,"average","Station01")
-
-
-#station00 = station00.loc["nwp_globalirrad"]
-#print(station00[0])
-
-#X = station00.drop(columns=["power"])
- 
-#VIF = variance_inflation_factor(X, station00["power"])
-
-#print(VIF)
-
-
-
-
-#fig = plt.figure()
-#ax2 = fig.add_subplot(1, 1, 1)
-#pf.correlationMatrixPlotter(ax2,station02)
-#plt.tight_layout()
-
+"""
+station = fl.sliceData(station,"2018-07-21 00:00:00","2018-07-30 23:59:59")
+file.close()
+fig,ax=plt.subplots(1,1,figsize=(8,6))
+pf.plotTimeSeries(ax,station,"power","power")
+"""
 plt.show()
 
