@@ -102,3 +102,4 @@ ax.plot(ysliced,label="Actual")
 ax.plot(y_pred,label="Predicted")
 plt.legend()
 plt.show()  
+
