@@ -40,8 +40,8 @@ def calculateIrradiances(data,metadata,stationNum):
     cols = data.columns.tolist()
     new_cos=sorted(cols)
     #move the second last to the last
-    new_cos=new_cos[:-2]+new_cos[-1:]+new_cos[-2:-1]
-    return data
+    new_cols=new_cos[:-2]+new_cos[-1:]+new_cos[-2:-1]
+    return data[new_cols]
 
 
 def main():
@@ -51,8 +51,7 @@ def main():
         st_data=fl.loadPkl(f"station0{i}.pkl")
         #if hmd_directirrad key is not in the dataset then calculate it
         if 1:
-            # remove hmd_directirrad and hmd_diffuseirrad from the dataset
-            st_data=st_data.drop(columns=["hmd_directirrad","hmd_diffuseirrad"])
+
             print("Calculating hmd_directirrad")
             st_data=calculateIrradiances(st_data,st_meta,i)
             # Saving station
