@@ -164,7 +164,13 @@ def loadPkl(file,path=None):
     return station
 
 
-
+def loadAllPkl():
+    station=[]
+    for i in range(10):
+        tempstr = "station0" + str(i) +".pkl"
+        temp = loadPkl(tempstr)
+        station.append(temp)
+    return station
 
 
 
