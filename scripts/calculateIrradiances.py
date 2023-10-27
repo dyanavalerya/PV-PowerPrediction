@@ -34,17 +34,20 @@ def calculateIrradiances(data,metadata,stationNum):
     # if value is negative set to last value
     while(len(data.loc[data["hmd_directirrad"]<0])):
         data.loc[data["hmd_directirrad"]<0,"hmd_directirrad"]=0
+    # set all nan values to zero
+    data["hmd_directirrad"]=data["hmd_directirrad"].fillna(0)
+    data["hmd_diffuseirrad"]=data["hmd_diffuseirrad"].fillna(0)
 
     return data
 
 
 def main():
-    for i in range(0,8):
+    for i in range(0,10):
         # Loading station
         print("Loading station",i)
         st_data=fl.loadPkl(f"station0{i}.pkl")
         #if hmd_directirrad key is not in the dataset then calculate it
-        if "hmd_directirrad" not in st_data.keys():
+        if "hmd_directirrad" in st_data.keys():
             print("Calculating hmd_directirrad")
             st_data=calculateIrradiances(st_data,st_meta,i)
             # Saving station
@@ -56,7 +59,7 @@ def main():
             pickle.dump(st_data,temp)
             temp.close()
             print("File saved as: ", file_path)
-        print("Allready calculated hmd_directirrad for station",i)
+        print("Calculated hmd_directirrad for station",i)
 if __name__ == "__main__":
     main()  
         
