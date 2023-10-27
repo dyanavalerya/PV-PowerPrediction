@@ -1,6 +1,7 @@
 import sys, os
 import pandas as pd
 import numpy as np
+import pickle
 from scipy.stats import zscore
 
 
@@ -146,7 +147,10 @@ def calculate_average_and_variance(dataframes):
 
     return pd.concat(stats, ignore_index=True)
 
-
+def loadpkl(file):
+    temp = open(file, 'rb')
+    station = pickle.load(temp)
+    return station
 
 
 
