@@ -155,8 +155,10 @@ def calculate_average_and_variance(dataframes):
     return pd.concat(stats, ignore_index=True)
 
 def loadPkl(file):
-    temp = open(file, 'rb')
+    tempstr ="dataset/" + file
+    temp = open(tempstr, 'rb')
     station = pickle.load(temp)
+    temp.close()
     return station
 
 
