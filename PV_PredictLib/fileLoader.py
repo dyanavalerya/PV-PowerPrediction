@@ -1,24 +1,34 @@
 import sys, os
 import pandas as pd
 import numpy as np
+import pickle
 from scipy.stats import zscore
 
 
-def loadFile(file_name, path=None):
+def loadFile(file_name, path=None,PKL=True): 
     if path == None:
         print(f"Path of current program:\n", os.path.abspath(os.path.dirname(__file__)))
-        datafolder_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'dataset/'))
+        datafolder_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'dataset/CSVFiles/'))
+        # go one folder back to get to the base folder
+        datafolder_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../dataset'))
+        datafolder_path_csv =  datafolder_path+ "/CSVFiles/"
+
     else:
-        datafolder_path = path
-    
+        datafolder_path_csv = path
+    # display a warning if a pkl version exists
+    if PKL:
+        if (os.path.isfile(os.path.join(datafolder_path, file_name[:-4] + ".pkl"))):
+            print("Warning: A pkl version of this file exists. It will be loaded instead of the csv file.")
+            print("If you want to load the csv file, set PKL=False.")
+            return loadPkl(file_name[:-4] + ".pkl",path)
     # check if folder exists if not then error
-    if (os.path.isdir(datafolder_path)):
-        print(f"Path of dataset folder:\n", datafolder_path)
+    if (os.path.isdir(datafolder_path_csv)):
+        print(f"Path of dataset folder:\n", datafolder_path_csv)
     else:
         print("Data folder path does not exist")
         sys.exit()
     
-    file_path = os.path.join(datafolder_path, file_name)
+    file_path = os.path.join(datafolder_path_csv, file_name)
     file_data=None
     # assign data in file
     if (os.path.isfile(file_path)):
@@ -34,10 +44,34 @@ def loadFile(file_name, path=None):
     print(file_data.head())
     return file_data
 
+def load_all_datasets(path=None):
+    """
+    Load all datasets into one. Add a column with the station number.
+
+    Returns:
+    all_data (pandas.DataFrame): A pandas dataframe containing all datasets.
+    """
+    meta=loadFile(f"metadata.csv",path)
+   
+    for i in range(0,9):
+        name=f"station0{i}"
+        loaded_data=loadFile(f"station0{i}.csv",path)
+        loaded_data["station"] = i
+        for row in meta.iterrows():
+            if row[1]["Station_ID"]==name:
+                loaded_data["power"]=loaded_data["power"]/meta["Capacity"][row[0]]
+        if i == 0:
+            all_data = loaded_data
+            
+        else:
+            all_data = pd.concat([all_data, loaded_data])
+    
+    
+    return all_data
+
 def fileInfo(file):
     time_start = file["date_time"][0]
     print(f"First date_time in dataset is: {time_start}")
-
 
 def sliceData(name,start_time,end_time):
     print('data sliced from ',start_time,' to ',end_time)
@@ -120,16 +154,14 @@ def calculate_average_and_variance(dataframes):
 
     return pd.concat(stats, ignore_index=True)
 
-
-
-
-
-
-
-
-
-
-
+def loadPkl(file,path=None):
+    if path==None:
+        path=os.path.abspath(os.path.join(os.path.dirname(__file__), '../dataset'))
+    file_path=os.path.join(path,file)
+    temp = open(file_path, 'rb')
+    station = pickle.load(temp)
+    temp.close()
+    return station
 
 
 

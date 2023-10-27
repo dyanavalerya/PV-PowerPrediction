@@ -1,7 +1,9 @@
-import matplotlib.pyplot as plt
-# Import functions
-import fileLoader
-import plotFunctions as pf
+import os, sys
+# if file is inside a folder then append base folder to sys.path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# load custom functions
+from PV_PredictLib import fileLoader
+from PV_PredictLib import plotFunctions as pf
 import pandas as pd
 import numpy as np 
 import matplotlib.pyplot as plt 
@@ -102,3 +104,4 @@ ax.plot(ysliced,label="Actual")
 ax.plot(y_pred,label="Predicted")
 plt.legend()
 plt.show()  
+
