@@ -160,6 +160,7 @@ def loadPkl(file,path=None):
     file_path=os.path.join(path,file)
     temp = open(file_path, 'rb')
     station = pickle.load(temp)
+    temp.close()
     return station
 
 
