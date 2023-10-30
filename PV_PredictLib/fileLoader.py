@@ -164,12 +164,12 @@ def loadPkl(file,path=None):
     return station
 
 
-def loadAllPkl(dropColumns):
+def loadAllPkl(dropColumns="default"):
     station=[]
     for i in range(10):
         tempstr = "station0" + str(i) +".pkl"
         temp = loadPkl(tempstr)
-        if len(dropColumns) != 0:
+        if dropColumns!="default":
             for i in range(len(dropColumns)):
                 temp = temp.drop(columns=[dropColumns[i]])            
         station.append(temp)
