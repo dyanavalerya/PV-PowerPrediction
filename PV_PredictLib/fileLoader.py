@@ -45,7 +45,7 @@ def loadFile(file_name, path=None,PKL=True):
     print(file_data.head())
     return file_data
 
-def load_all_datasets(path=None):
+def load_all_datasets(path=None,norm=False):
     """
     Load all datasets into one. Add a column with the station number.
 
@@ -54,16 +54,16 @@ def load_all_datasets(path=None):
     """
     meta=loadFile(f"metadata.csv",path)
    
-    for i in range(0,9):
+    for i in range(0,10):
         name=f"station0{i}"
         loaded_data=loadFile(f"station0{i}.csv",path)
         loaded_data["station"] = i
-        for row in meta.iterrows():
-            if row[1]["Station_ID"]==name:
-                loaded_data["power"]=loaded_data["power"]/meta["Capacity"][row[0]]
+        if norm==True:
+            for row in meta.iterrows():
+                if row[1]["Station_ID"]==name:
+                    loaded_data["power"]=loaded_data["power"]/meta["Capacity"][row[0]]
         if i == 0:
             all_data = loaded_data
-            
         else:
             all_data = pd.concat([all_data, loaded_data])
     
