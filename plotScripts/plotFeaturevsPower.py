@@ -13,9 +13,11 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 # Defining functions 
-
-def plot_feature_vs_power(all_data,save_path,feature_name):
+def normalize_feature(data,feature_name):
+    for station in data["station"].unique():
+def plot_feature_vs_power(all_data,save_path,feature_name,norm=False):
     fig,ax=plt.subplots(1,1,figsize=(8,6))
+    
     pf.plotColumnScatter(ax,all_data,feature_name,"power",f"{feature_name} vs power")
     plt.title(f"Scatterplot of {feature_name} vs power")
     if not os.path.exists(save_path+"/feature_vs_power"):
