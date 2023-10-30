@@ -6,6 +6,7 @@ from scipy.stats import zscore
 
 
 def loadFile(file_name, path=None,PKL=True): 
+    
     if path == None:
         print(f"Path of current program:\n", os.path.abspath(os.path.dirname(__file__)))
         datafolder_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'dataset/CSVFiles/'))
@@ -175,8 +176,21 @@ def loadAllPkl(dropColumns="default"):
         station.append(temp)
     return station
 
-
-
-
-
+def loadAllPklNormalized(dropColumns="default"):
+    meta=loadFile(f"metadata.csv")
+    station=[]
+    for i in range(10):
+        name=f"station0{i}"
+        tempstr = name +".pkl"
+        temp = loadPkl(tempstr)
+        if dropColumns!="default":
+            for i in range(len(dropColumns)):
+                temp = temp.drop(columns=[dropColumns[i]])      
+        for row in meta.iterrows():
+            if row[1]["Station_ID"]==name:
+                temp["power"]=temp["power"]/meta["Capacity"][row[0]]
+     
+        station.append(temp)
+    return station
+    
 
