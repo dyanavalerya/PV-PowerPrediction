@@ -32,8 +32,8 @@ def timeplot(data,name=""):
     
 def main():
     data=fl.loadPkl("station02.pkl")
-    timeplot(data,"Sunset cutted data")
-    
+    timeplot(data,"Nighttime")
+    plt.title("Time plot of Power and Global irradiance excluding nighttime hours")
     data=fl.loadFile("station02.csv",PKL=False)
     timeplot(data)
 
