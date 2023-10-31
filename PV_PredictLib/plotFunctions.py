@@ -17,7 +17,7 @@ def plotTimeSeries(ax :plt.axes ,data : pd.DataFrame,colloumName : str,label: st
     x = data["date_time"]
     y = data[colloumName]
     plotBase(ax,x,y,label)
-    ax.set_xlabel("Time")
+    ax.set_xlabel("Time (UTC)")
     ax.set_ylabel(colloumName)
     #set ticks 
     ax.xaxis.set_major_locator(ticker.MultipleLocator(base=scaleTicks))
