@@ -11,7 +11,7 @@ def plotIrradiances(data,date1,date2):
     st2=fl.sliceData(data,date1,date2)
     fig,ax=plt.subplots(1,1,figsize=(8,6))
     pf.plotTimeSeries(ax,st2,"nwp_directirrad","nwp_directirrad",24)
-    pf.plotTimeSeries(ax,st2,"hmd_diffuseirrad","hmd_diffuseirrad",24)
+    pf.plotTimeSeries(ax,st2,"nwp_hmd_diffuseirrad","nwp_hmd_diffuseirrad",24)
     pf.plotTimeSeries(ax,st2,"nwp_globalirrad","nwp_globalirrad",24)
     plt.title("Comparison of NWP irradiance ")
     plt.xlabel("Time")
@@ -20,7 +20,7 @@ def plotIrradiances(data,date1,date2):
     plt.tight_layout()
     plt.savefig(r"C:\Users\jeppe\OneDrive - Aalborg Universitet\7. Semester Shared Work\Project\Figures\NWP_irradiance_comparison.png",format="png")
     fig,ax=plt.subplots(1,1,figsize=(8,6))
-    pf.plotTimeSeries(ax,st2,"hmd_directirrad","hmd_directirrad",24)
+    pf.plotTimeSeries(ax,st2,"lmd_hmd_directirrad","lmd_hmd_directirrad",24)
     pf.plotTimeSeries(ax,st2,"lmd_diffuseirrad","lmd_diffuseirrad",24)
     pf.plotTimeSeries(ax,st2,"lmd_totalirrad","lmd_totalirrad",24)
     

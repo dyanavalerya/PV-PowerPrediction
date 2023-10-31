@@ -6,6 +6,7 @@ from scipy.stats import zscore
 
 
 def loadFile(file_name, path=None,PKL=True): 
+    
     if path == None:
         print(f"Path of current program:\n", os.path.abspath(os.path.dirname(__file__)))
         datafolder_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'dataset/CSVFiles/'))
@@ -44,7 +45,7 @@ def loadFile(file_name, path=None,PKL=True):
     print(file_data.head())
     return file_data
 
-def load_all_datasets(path=None):
+def load_all_datasets(path=None,norm=False):
     """
     Load all datasets into one. Add a column with the station number.
 
@@ -53,16 +54,16 @@ def load_all_datasets(path=None):
     """
     meta=loadFile(f"metadata.csv",path)
    
-    for i in range(0,9):
+    for i in range(0,10):
         name=f"station0{i}"
         loaded_data=loadFile(f"station0{i}.csv",path)
         loaded_data["station"] = i
-        for row in meta.iterrows():
-            if row[1]["Station_ID"]==name:
-                loaded_data["power"]=loaded_data["power"]/meta["Capacity"][row[0]]
+        if norm==True:
+            for row in meta.iterrows():
+                if row[1]["Station_ID"]==name:
+                    loaded_data["power"]=loaded_data["power"]/meta["Capacity"][row[0]]
         if i == 0:
             all_data = loaded_data
-            
         else:
             all_data = pd.concat([all_data, loaded_data])
     
@@ -164,19 +165,32 @@ def loadPkl(file,path=None):
     return station
 
 
-def loadAllPkl(dropColumns):
+def loadAllPkl(dropColumns="default"):
     station=[]
     for i in range(10):
         tempstr = "station0" + str(i) +".pkl"
         temp = loadPkl(tempstr)
-        if len(dropColumns) != 0:
+        if dropColumns!="default":
             for i in range(len(dropColumns)):
                 temp = temp.drop(columns=[dropColumns[i]])            
         station.append(temp)
     return station
 
-
-
-
-
+def loadAllPklNormalized(dropColumns="default"):
+    meta=loadFile(f"metadata.csv")
+    station=[]
+    for i in range(10):
+        name=f"station0{i}"
+        tempstr = name +".pkl"
+        temp = loadPkl(tempstr)
+        if dropColumns!="default":
+            for i in range(len(dropColumns)):
+                temp = temp.drop(columns=[dropColumns[i]])      
+        for row in meta.iterrows():
+            if row[1]["Station_ID"]==name:
+                temp["power"]=temp["power"]/meta["Capacity"][row[0]]
+     
+        station.append(temp)
+    return station
+    
 

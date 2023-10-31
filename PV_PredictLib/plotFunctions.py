@@ -110,27 +110,29 @@ def plotPowCorr(data):
     """
     This function plots a heatmap of the correlation between power and NWP data for each power station
     """
-    correlation = np.zeros(11)
+    correlation = np.zeros(13)
     vectors = []
     for i in range(len(data)):
         temp = data[i]
         #temp = temp.select_dtypes(include=['float64'])
-        correlation[0] = temp["power"].corr(temp["nwp_globalirrad"])
-        correlation[1] = temp["power"].corr(temp["nwp_directirrad"])
-        correlation[2] = temp["power"].corr(temp["nwp_temperature"])
-        correlation[3] = temp["power"].corr(temp["nwp_humidity"])
-        correlation[4] = temp["power"].corr(temp["nwp_windspeed"])
-        correlation[5] = temp["power"].corr(temp["nwp_pressure"])
-        correlation[6] = temp["power"].corr(temp["lmd_totalirrad"])
-        correlation[7] = temp["power"].corr(temp["lmd_diffuseirrad"])
-        correlation[8] = temp["power"].corr(temp["lmd_temperature"])
-        correlation[9] = temp["power"].corr(temp["lmd_pressure"])
-        correlation[10] = temp["power"].corr(temp["lmd_windspeed"])
+        correlation[0] = temp["power"].corr(temp["lmd_diffuseirrad"])
+        correlation[1] = temp["power"].corr(temp["lmd_hmd_directirrad"])
+        correlation[2] = temp["power"].corr(temp["lmd_totalirrad"])
+        correlation[3] = temp["power"].corr(temp["lmd_pressure"])
+        correlation[4] = temp["power"].corr(temp["lmd_temperature"])
+        correlation[5] = temp["power"].corr(temp["lmd_windspeed"])
+        correlation[6] = temp["power"].corr(temp["nwp_hmd_diffuseirrad"])
+        correlation[7] = temp["power"].corr(temp["nwp_directirrad"])
+        correlation[8] = temp["power"].corr(temp["nwp_globalirrad"])
+        correlation[9] = temp["power"].corr(temp["nwp_humidity"])
+        correlation[10] = temp["power"].corr(temp["nwp_pressure"])
+        correlation[11] = temp["power"].corr(temp["nwp_temperature"])
+        correlation[12] = temp["power"].corr(temp["nwp_windspeed"])        
         vectors.append(correlation)
-        correlation = np.zeros(11)
+        correlation = np.zeros(13)
     powCorrMatrix = np.array(vectors)
     # labels for x-axis
-    x_axis_labels = ["NWP Globalirrad","NWP Directirrad","NWP Temperature","NWP Humidity","NWP Windspeed","NWP Pressure", "LMD Totalirrad", "LMD Diffuseirrad", "LMD Temperature", "LMD Pressure", "LMD Windspeed"] 
+    x_axis_labels = ["LMD Diffuseirrad","LMD HMD Directirrad","LMD Totalirrad","LMD Pressure","LMD Temperature","LMD Windspeed", "NWP HMD Diffuseirrad", "NWP Directirrad", "NWP Globalirrad", "NWP Humidity", "NWP Pressure", "NWP Temperature","NWP Windspeed"] 
     # labels for y-axis
     y_axis_labels = ["Station00","Station01","Station02","Station03","Station04","Station05","Station06","Station07","Station08","Station09"] 
     powCorrMatrix = pd.DataFrame(powCorrMatrix)
@@ -138,7 +140,7 @@ def plotPowCorr(data):
     fig = plt.figure()
     ax = fig.add_subplot(1, 1, 1)
 
-    ax = sns.heatmap(powCorrMatrix, ax=ax,vmin = -1, vmax = 1, annot=True, xticklabels=x_axis_labels, yticklabels=y_axis_labels, fmt=".2f")
+    ax = sns.heatmap(powCorrMatrix, ax=ax,vmin = -1, vmax = 1, annot=True, xticklabels=x_axis_labels, yticklabels=y_axis_labels, fmt=".2f", cbar=False)
     ax.set_title("Correlation matrix of power and each recorded feature from the 10 stations", fontsize=16)
     plt.tight_layout()
   
@@ -202,11 +204,18 @@ def circle3dScatterPlot(dataFrame,setting,namestring):
         
 
 def nwpError():
-    data=fl.load_all_datasets()
+    dataTemp = fl.loadAllPkl()
+    for i in range(10):
+        temp = dataTemp[i]
+        if i == 0:
+            data = temp
+        else:
+            pd.concat([data, temp])
+#    data=fl.load_all_datasets()
 
     MSE_windspeed=mean_squared_error(data.lmd_windspeed,data.nwp_windspeed)
     RMSE_windspeed=np.sqrt(MSE_windspeed)
-    NRMSE_windspeed=RMSE_windspeed/np.msean(data.lmd_windspeed)
+    NRMSE_windspeed=RMSE_windspeed/np.mean(data.lmd_windspeed)
     print('windspeed NRMSE: ',NRMSE_windspeed)
 
     MSE_pressure=mean_squared_error(data.lmd_pressure,data.nwp_pressure)
@@ -223,13 +232,23 @@ def nwpError():
     RMSE_globalirrad=np.sqrt(MSE_globalirrad)
     NRMSE_globalirrad=RMSE_globalirrad/np.mean(data.lmd_totalirrad)
     print('globalirrad NRMSE: ',NRMSE_globalirrad)
+    
+    MSE_directirrad=mean_squared_error(data.lmd_hmd_directirrad,data.nwp_directirrad)
+    RMSE_directirrad=np.sqrt(MSE_directirrad)
+    NRMSE_directirrad=RMSE_directirrad/np.mean(data.lmd_hmd_directirrad)
+    print('directlirrad NRMSE: ',NRMSE_directirrad)
+    
+    MSE_diffuseirrad=mean_squared_error(data.lmd_diffuseirrad,data.nwp_hmd_diffuseirrad)
+    RMSE_diffuseirrad=np.sqrt(MSE_diffuseirrad)
+    NRMSE_diffuseirrad=RMSE_diffuseirrad/np.mean(data.lmd_diffuseirrad)
+    print('diffuseirrad NRMSE: ',NRMSE_diffuseirrad)
 
 
-    labels = ['Temperature', 'Pressure', 'Wind speed', 'Global Irradiance']  # Updated labels
-    nrmse_values = [NRMSE_temperature, NRMSE_pressure, NRMSE_windspeed, NRMSE_globalirrad]  # Updated NRMSE values
+    labels = ['Temperature', 'Pressure', 'Wind speed', 'Global Irradiance', 'Direct Irradiance', 'Diffuse Irradiance']  # Updated labels
+    nrmse_values = [NRMSE_temperature, NRMSE_pressure, NRMSE_windspeed, NRMSE_globalirrad,NRMSE_directirrad,NRMSE_diffuseirrad]  # Updated NRMSE values
 
     plt.figure(figsize=(10, 6))
-    bars = plt.bar(labels, nrmse_values, color=['blue', 'red', 'purple', 'green'])  # Added color for Global Irradiance
+    bars = plt.bar(labels, nrmse_values)  # Added color for Global Irradiance
 
     for bar, nrmse_value in zip(bars, nrmse_values):
         yval = bar.get_height()

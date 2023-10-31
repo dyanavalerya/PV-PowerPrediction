@@ -163,3 +163,4 @@ cython_debug/
 jeppe.py
 JakobtestFile.py
 gustav.py
+.vscode/settings.json
