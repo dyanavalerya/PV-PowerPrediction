@@ -26,14 +26,14 @@ def timeplot(data,name=""):
     axr.set_ylabel("Global irradiance [W/m^2]",color="C1")
     ax.get_legend().remove()
     axr.get_legend().remove()
-    plt.title("Time plot of Power and Global irradiance")
+    plt.title("Time plot of Power and Global irradiance",size=16)
     plt.tight_layout()
     plt.savefig(r"C:\Users\jeppe\OneDrive - Aalborg Universitet\7. Semester Shared Work\Project\Figures\ "+name+"Timeplot.png",format="png")
     
 def main():
     data=fl.loadPkl("station02.pkl")
     timeplot(data,"Nighttime")
-    plt.title("Time plot of Power and Global irradiance excluding nighttime hours")
+    plt.title("Time plot of Power and Global irradiance excluding nighttime hours",size=16)
     data=fl.loadFile("station02.csv",PKL=False)
     timeplot(data)
 
