@@ -27,7 +27,8 @@ def main():
     corrMatrix = data.corr()
     # plotting the correlation matrix
     plt.figure(figsize=(9,6))
-    sb.heatmap(data.corr(), annot=True,fmt=".2f", linewidths=.5,vmin = -1, vmax = 1, cbar_kws={'label': 'Correlation Coefficient'})
+    #If we want cbar, we van add this and remove cbar=False , cbar_kws={'label': 'Correlation Coefficient'}
+    sb.heatmap(data.corr(), annot=True,fmt=".2f", linewidths=.5,vmin = -1, vmax = 1,cbar=False)
     plt.title("Correlation matrix of station02 dataset",size=16)
     plt.tight_layout()
     # save the figure

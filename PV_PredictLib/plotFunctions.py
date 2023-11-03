@@ -17,7 +17,7 @@ def plotTimeSeries(ax :plt.axes ,data : pd.DataFrame,colloumName : str,label: st
     x = data["date_time"]
     y = data[colloumName]
     plotBase(ax,x,y,label)
-    ax.set_xlabel("Time")
+    ax.set_xlabel("Time (UTC)")
     ax.set_ylabel(colloumName)
     #set ticks 
     ax.xaxis.set_major_locator(ticker.MultipleLocator(base=scaleTicks))
@@ -140,7 +140,7 @@ def plotPowCorr(data):
     fig = plt.figure()
     ax = fig.add_subplot(1, 1, 1)
 
-    ax = sns.heatmap(powCorrMatrix, ax=ax,vmin = -1, vmax = 1, annot=True, xticklabels=x_axis_labels, yticklabels=y_axis_labels, fmt=".2f", cbar=False)
+    ax = sns.heatmap(powCorrMatrix, ax=ax,vmin = -1, vmax = 1,linewidths=.5,annot=True, xticklabels=x_axis_labels, yticklabels=y_axis_labels, fmt=".2f", cbar=False)
     ax.set_title("Correlation matrix of power and each recorded feature from the 10 stations", fontsize=16)
     plt.tight_layout()
   
@@ -296,3 +296,45 @@ def windDirectionCorrelation(data):
     print("Coefficients (a1, a2) for lmd:", x_n_lmd,'; for nwp:',x_n_nwp)
     print("Correlation coefficient lmd:", correlation_lmd,'; for nwp:',correlation_nwp)
     return correlation_lmd,correlation_nwp
+
+def plotAvgPowerVsCap():
+    fig, ax = plt.subplots()
+    mean=[]
+    capacity=[]
+    stations = ['Station 00', 'Station 01', 'Station 02', 'Station 03', 'Station 04','Station 05','Station 06','Station 07','Station 08','Station 09']
+    
+    meta=fl.loadFile(f"metadata.csv")
+    
+    data = fl.loadAllPkl()
+    for i in range(10):
+        tempData= data[i]
+        tempMean = tempData["power"].max()
+        mean.append(tempMean)
+        tempMeta = meta["Capacity"][i]
+        capacity.append(tempMeta)
+    
+
+    print(capacity)
+    print(mean)
+    ax.scatter(capacity,mean)
+    
+    
+    ax.annotate(stations[0], (capacity[0], mean[0]), textcoords="offset points", xytext=(10,00), ha='left')
+    ax.annotate(stations[1], (capacity[1], mean[1]), textcoords="offset points", xytext=(0,10), ha='center')
+    ax.annotate(stations[2], (capacity[2], mean[2]), textcoords="offset points", xytext=(0,10), ha='center')
+        
+    ax.annotate(stations[3], (capacity[3], mean[3]), textcoords="offset points", xytext=(10,-2), ha='left')
+    ax.annotate(stations[4], (capacity[4], mean[4]), textcoords="offset points", xytext=(0,10), ha='center')
+    ax.annotate(stations[5], (capacity[5], mean[5]), textcoords="offset points", xytext=(-10,0), ha='right')
+    ax.annotate(stations[6], (capacity[6], mean[6]), textcoords="offset points", xytext=(0,10), ha='center')
+    ax.annotate(stations[7], (capacity[7], mean[7]), textcoords="offset points", xytext=(10,-9), ha='left')
+    ax.annotate(stations[8], (capacity[8], mean[8]), textcoords="offset points", xytext=(10,3), ha='left')
+    ax.annotate(stations[9], (capacity[9], mean[9]), textcoords="offset points", xytext=(0,10), ha='center')
+        
+    plt.xlabel('Capacity [kW]')
+    plt.ylabel('Mean [MW]')
+    plt.title('Scatter Plot with mean power produced vs capacity')
+    return  
+
+
+
