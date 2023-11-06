@@ -73,7 +73,11 @@ def load_LSTM_data(station):
         def create_sequences(dataset, n_past, n_future):
             X, Y = [], []
             for i in range(n_past, len(dataset) - n_future + 1):
+                # i - n_past:i is a interval of 96 samples * 10 features
+                # list(range(dataset.shape[1])) is the columns of the dataset 0-9
+                # X becomes a list of N * 96 samples * 10 features
                 X.append(dataset.iloc[i - n_past:i, list(range(dataset.shape[1]))].values)
+                
                 Y.append(dataset.iloc[i + n_future - 1:i + n_future, -1].values)
             return np.array(X), np.array(Y)
         
