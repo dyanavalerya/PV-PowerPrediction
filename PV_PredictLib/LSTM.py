@@ -13,12 +13,13 @@ import pickle
 
 def fit_LSTM(trainX,trainY):
     model = Sequential()
-    model.add(LSTM(500, activation='relu', input_shape=(trainX.shape[1], trainX.shape[2]), return_sequences=True))#lstm lag
+    model.add(LSTM(200, activation='relu', input_shape=(trainX.shape[1], trainX.shape[2]), return_sequences=True))#lstm lag
     model.add(LSTM(100, activation='relu', return_sequences=False)) #lstm lag
     model.add(Dense(trainY.shape[1]))#NN lag
     model.compile(optimizer='adam', loss='mse')
     model.summary()
-    model.fit(trainX, trainY, epochs=5, batch_size=16, validation_split=0.1, verbose=1)
+    model.fit(trainX, trainY, epochs=5, batch_size=1000, validation_split=0.1, verbose=1)
+    model.save("my_model.keras")
     return model     
 
 def train_model(station):
@@ -28,12 +29,12 @@ def train_model(station):
     print(np.shape(trainX),np.shape(trainY),np.shape(testX),np.shape(testY))
 
     model=fit_LSTM(trainX,trainY)
-    model.save("my_model.keras")
+    return model
 
 
 
 def remove_cols(data):
-    cols_to_remove = ['nwp_winddirection', 'lmd_winddirection', 'lmd_pressure', 'nwp_pressure', 'date_time', 'station']
+    cols_to_remove = ['nwp_winddirection', 'lmd_winddirection', 'lmd_pressure', 'nwp_pressure', 'date_time', 'station','nwp_humidity']
     cols = [col for col in data.columns if col not in cols_to_remove]
     print('columns that are used: ',cols)
     data=data[cols]
@@ -61,7 +62,7 @@ def load_LSTM_data(station):
         data= pd.DataFrame(scaler.transform(data))
 
         n_future = 24 * 4   # Number of samples we want to look into the future based on the past days.
-        n_past = 24 * 4   # Number of past samples we want to use to predict the future.
+        n_past = 4 * 4   # Number of past samples we want to use to predict the future.
 
         data_train = data.iloc[:int(data.shape[0] * 0.8), :]
         data_test = data.iloc[int(data.shape[0] * 0.8):, :]
@@ -72,9 +73,12 @@ def load_LSTM_data(station):
 
         def create_sequences(dataset, n_past, n_future):
             X, Y = [], []
-            for i in range(n_past, len(dataset) - n_future + 1):
-                X.append(dataset.iloc[i - n_past:i, list(range(dataset.shape[1]))].values)
-                Y.append(dataset.iloc[i + n_future - 1:i + n_future, -1].values)
+            for i in range(n_past, len(dataset) - n_future+1 ):
+                past=dataset.iloc[i - n_past:i, :4].values
+                future=dataset.iloc[i:i+n_future, 4:-1].values
+                combined_data = np.concatenate((past, future), axis=0)
+                X.append(combined_data)
+                Y.append(dataset.iloc[i:i+n_future, -1].values)
             return np.array(X), np.array(Y)
         
         trainX, trainY = create_sequences(data_train, n_past, n_future)
