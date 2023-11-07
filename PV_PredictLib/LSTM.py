@@ -37,7 +37,7 @@ def LSTM_code():
 
 def fit_LSTM(trainX,trainY):
     model = Sequential()
-    model.add(LSTM(200, activation='relu', input_shape=(trainX.shape[1], trainX.shape[2]), return_sequences=True))#lstm lag
+    model.add(LSTM(500, activation='relu', input_shape=(trainX.shape[1], trainX.shape[2]), return_sequences=True))#lstm lag
     model.add(LSTM(100, activation='relu', return_sequences=False)) #lstm lag
     model.add(Dense(trainY.shape[1]))#NN lag
     model.compile(optimizer='adam', loss='mse')
@@ -88,22 +88,12 @@ def load_LSTM_data(station):
 
         def create_sequences(dataset, n_past, n_future):
             X, Y = [], []
-<<<<<<< HEAD
             for i in range(n_past, len(dataset) - n_future+1 ):
                 past=dataset.iloc[i - n_past:i, :4].values
                 future=dataset.iloc[i:i+n_future, 4:-1].values
                 combined_data = np.concatenate((past, future), axis=0)
                 X.append(combined_data)
                 Y.append(dataset.iloc[i:i+n_future, -1].values)
-=======
-            for i in range(n_past, len(dataset) - n_future + 1):
-                # i - n_past:i is a interval of 96 samples * 10 features
-                # list(range(dataset.shape[1])) is the columns of the dataset 0-9
-                # X becomes a list of N * 96 samples * 10 features
-                X.append(dataset.iloc[i - n_past:i, list(range(dataset.shape[1]))].values)
-                
-                Y.append(dataset.iloc[i + n_future - 1:i + n_future, -1].values)
->>>>>>> 43fe6d3537c9d94faff8a10fe7268edeec3e0945
             return np.array(X), np.array(Y)
         
         trainX, trainY = create_sequences(data_train, n_past, n_future)
