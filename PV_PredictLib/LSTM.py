@@ -14,7 +14,7 @@ import keras
 from matplotlib import pyplot as plt
 
 def LSTM_code():
-    trainX,trainY,testX,testY=LSTM.load_LSTM_data('station00')
+    trainX,trainY,testX,testY=load_LSTM_data('station00')
     print(f'trainX shape == {trainX.shape}.')
     print(f'trainY shape == {trainY.shape}.')
     print(f'testX shape == {testX.shape}.')
@@ -112,3 +112,5 @@ def load_LSTM_data(station):
         print(f'testY shape == {testY.shape}.')
 
     return trainX, trainY, testX, testY
+
+
