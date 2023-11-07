@@ -5,7 +5,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense
 import pandas as pd
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import StandardScaler
 from PV_PredictLib import fileLoader as fl
 import numpy as np
 import pandas as pd
@@ -37,12 +37,12 @@ def LSTM_code():
 
 def fit_LSTM(trainX,trainY):
     model = Sequential()
-    model.add(LSTM(500, activation='relu', input_shape=(trainX.shape[1], trainX.shape[2]), return_sequences=True))#lstm lag
-    model.add(LSTM(100, activation='relu', return_sequences=False)) #lstm lag
+    model.add(LSTM(1000, activation='relu', input_shape=(trainX.shape[1], trainX.shape[2]), return_sequences=True))#lstm lag
+    model.add(LSTM(500, activation='relu', return_sequences=False)) #lstm lag
     model.add(Dense(trainY.shape[1]))#NN lag
     model.compile(optimizer='adam', loss='mse')
     model.summary()
-    model.fit(trainX, trainY, epochs=5, batch_size=1000, validation_split=0.1, verbose=1)
+    model.fit(trainX, trainY, epochs=5, batch_size=50, validation_split=0.1, verbose=1)
     model.save("my_model.keras")
     return model     
 
@@ -72,7 +72,7 @@ def load_LSTM_data(station):
         data=remove_cols(data)
 
         # normalize the dataset
-        scaler = MinMaxScaler()
+        scaler = StandardScaler()
         scaler = scaler.fit(data)
         data= pd.DataFrame(scaler.transform(data))
 
