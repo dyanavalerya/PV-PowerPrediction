@@ -166,3 +166,4 @@ gustav.py
 .vscode/settings.json
 station00LSTM.pkl
 my_model.keras
+Models*.pkl
