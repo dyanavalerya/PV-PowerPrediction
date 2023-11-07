@@ -10,6 +10,30 @@ from PV_PredictLib import fileLoader as fl
 import numpy as np
 import pandas as pd
 import pickle
+import keras
+from matplotlib import pyplot as plt
+
+def LSTM_code():
+    trainX,trainY,testX,testY=LSTM.load_LSTM_data('station00')
+    print(f'trainX shape == {trainX.shape}.')
+    print(f'trainY shape == {trainY.shape}.')
+    print(f'testX shape == {testX.shape}.')
+    print(f'testY shape == {testY.shape}.')
+
+    #fit_LSTM(trainX,trainY)
+
+    reconstructed_model = keras.models.load_model("my_model.keras")
+    pred=reconstructed_model.predict(trainX)
+
+    x = list(range(testY.shape[1]))
+    plt.figure()
+    plt.plot(x,pred[:,0], label='predicted')
+    plt.plot(x,testY[:,0], label='original')
+    plt.legend()
+    plt.show()
+
+    print('done')
+
 
 def fit_LSTM(trainX,trainY):
     model = Sequential()
@@ -21,15 +45,6 @@ def fit_LSTM(trainX,trainY):
     model.fit(trainX, trainY, epochs=5, batch_size=1000, validation_split=0.1, verbose=1)
     model.save("my_model.keras")
     return model     
-
-def train_model(station):
-
-    #split it to train- and test data
-    trainX,trainY,testX,testY=load_LSTM_data(station)
-    print(np.shape(trainX),np.shape(trainY),np.shape(testX),np.shape(testY))
-
-    model=fit_LSTM(trainX,trainY)
-    return model
 
 
 
