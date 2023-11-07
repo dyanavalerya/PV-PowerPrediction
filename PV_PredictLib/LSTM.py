@@ -5,7 +5,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense
 import pandas as pd
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import MinMaxScaler
 from PV_PredictLib import fileLoader as fl
 import numpy as np
 import pandas as pd
@@ -37,12 +37,12 @@ def LSTM_code():
 
 def fit_LSTM(trainX,trainY):
     model = Sequential()
-    model.add(LSTM(1000, activation='relu', input_shape=(trainX.shape[1], trainX.shape[2]), return_sequences=True))#lstm lag
-    model.add(LSTM(500, activation='relu', return_sequences=False)) #lstm lag
+    model.add(LSTM(100, activation='relu', input_shape=(trainX.shape[1], trainX.shape[2]), return_sequences=True))#lstm lag
+    model.add(LSTM(100, activation='relu', return_sequences=False)) #lstm lag
     model.add(Dense(trainY.shape[1]))#NN lag
     model.compile(optimizer='adam', loss='mse')
     model.summary()
-    model.fit(trainX, trainY, epochs=5, batch_size=50, validation_split=0.1, verbose=1)
+    model.fit(trainX, trainY, epochs=5, batch_size=16, validation_split=0, verbose=1)
     model.save("my_model.keras")
     return model     
 
@@ -72,7 +72,7 @@ def load_LSTM_data(station):
         data=remove_cols(data)
 
         # normalize the dataset
-        scaler = StandardScaler()
+        scaler = MinMaxScaler()
         scaler = scaler.fit(data)
         data= pd.DataFrame(scaler.transform(data))
 
@@ -89,8 +89,8 @@ def load_LSTM_data(station):
         def create_sequences(dataset, n_past, n_future):
             X, Y = [], []
             for i in range(n_past, len(dataset) - n_future+1 ):
-                past=dataset.iloc[i - n_past:i, :4].values
-                future=dataset.iloc[i:i+n_future, 4:-1].values
+                past=dataset.iloc[i - n_past:i, 4:-1].values
+                future=dataset.iloc[i:i+n_future, :4].values
                 combined_data = np.concatenate((past, future), axis=0)
                 X.append(combined_data)
                 Y.append(dataset.iloc[i:i+n_future, -1].values)
