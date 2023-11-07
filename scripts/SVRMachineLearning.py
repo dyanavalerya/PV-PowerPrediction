@@ -87,7 +87,21 @@ def predict96ModelsLMDAhead(Models_,stationTest):
     return predictedValues,scorelist
 
 stationTrain,stationTest=loadDataAndSplit(3)
-
+def create_sequences(dataset, n_past, n_future):
+            X, Y = [], []
+            for i in range(n_past, len(dataset) - n_future+1 ):
+                # take all features with prefix nwp from the n_past samples 
+                
+                featureNamesLMD=[col for col in dataset.columns if col.startswith("lmd")]
+                past=dataset[featureNamesLMD].iloc[i - n_past:i]
+                featureNamesNWP=[col for col in dataset.columns if col.startswith("nwp")]
+                future=dataset[featureNamesNWP].iloc[i:i+n_future]
+                
+                combined_data = np.concatenate((past, future), axis=0)
+                X.append(combined_data)
+                Y.append(dataset.iloc[i:i+n_future, -1].values)
+            return np.array(X), np.array(Y)
+create_sequences(stationTrain, 24, 4)
 
 PipeLinear=Pipeline([('scaler', StandardScaler()), ('SVR', SVR(kernel='linear'))])
 PipeRadial=Pipeline([('scaler', StandardScaler()), ('SVR', SVR(kernel='rbf',epsilon=1))])
