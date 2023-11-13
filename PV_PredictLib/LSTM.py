@@ -36,8 +36,18 @@ def LSTM_code():
     print('done')
 
 
-def fit_LSTM(trainX,trainY,save_file):
-    """
+def fit_LSTM(trainX,trainY,save_file):    
+    model = Sequential()
+    model.add(LSTM(100, activation='relu', input_shape=(trainX.shape[1], trainX.shape[2]), return_sequences=True))#lstm lag
+    model.add(LSTM(100, activation='relu', return_sequences=False)) #lstm lag
+    model.add(Dense(trainY.shape[1]))#NN lag
+    model.compile(optimizer='adam', loss='mse')
+    model.summary()
+    model.fit(trainX, trainY, epochs=100, batch_size=16, validation_split=0.2, verbose=1)
+    model.save(save_file)
+    return model     
+
+def fit_DNN(trainX,trainY,save_file):
     input_shape = (trainX.shape[1], trainX.shape[2])
 
     # Create a sequential model
@@ -53,18 +63,11 @@ def fit_LSTM(trainX,trainY,save_file):
     model.compile(optimizer='adam', loss='mse')
     # Display the model summary
     model.summary()
-    """
-
-    
-    model = Sequential()
-    model.add(LSTM(100, activation='relu', input_shape=(trainX.shape[1], trainX.shape[2]), return_sequences=True))#lstm lag
-    model.add(LSTM(100, activation='relu', return_sequences=False)) #lstm lag
-    model.add(Dense(trainY.shape[1]))#NN lag
-    model.compile(optimizer='adam', loss='mse')
-    model.summary()
-    model.fit(trainX, trainY, epochs=10, batch_size=16, validation_split=0.1, verbose=1)
+    model.fit(trainX, trainY, epochs=100, batch_size=16, validation_split=0.2, verbose=1)
     model.save(save_file)
     return model     
+
+    
 
 def split_dataframe_columns(df):
     """
@@ -110,7 +113,9 @@ def remove_cols(data, cols_to_remove=['nwp_winddirection', 'lmd_winddirection', 
     return data
 
 def load_LSTM_data(station,cols_to_remove=None,n_future = 24 * 4,n_past = 4 * 4):
-    file_path = station+'LSTM.pkl'
+    station_name = os.path.splitext(station)[0]
+    file_format = os.path.splitext(station)[1]
+    file_path = station_name+'LSTM.pkl'
     if os.path.isfile(file_path):
         print(f'The file {file_path} exists ')
         with open(file_path, 'rb') as file:
@@ -121,7 +126,10 @@ def load_LSTM_data(station,cols_to_remove=None,n_future = 24 * 4,n_past = 4 * 4)
         print('and have been downloaded')
     else:
         print(f'The file {file_path} does not exist, so the dataset is being split up for the first time')
-        data=fl.loadFile(station+'.csv',PKL=False)
+        if file_format == '.csv':
+            data=fl.loadFile(station_name+'.csv',PKL=False)
+        else:
+            data = fl.loadPkl(station_name + '.pkl')
 
         data=remove_cols(data,cols_to_remove)
         
@@ -141,7 +149,7 @@ def load_LSTM_data(station,cols_to_remove=None,n_future = 24 * 4,n_past = 4 * 4)
         normalized_power_train = normalized_power[:int(normalized_power.shape[0] * 0.8), :]
         normalized_power_test = normalized_power[int(normalized_power.shape[0] * 0.8):, :]
         
-        file_path = 'station00LSTM.pkl'
+        file_path = station_name+'LSTM.pkl'
 
         def create_sequences(lmd_data=None,nwp_data=None,power_data=None, n_past=4*4, n_future=24*4):
             X, Y = [], []
