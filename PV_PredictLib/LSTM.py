@@ -38,12 +38,13 @@ def LSTM_code():
 
 def fit_LSTM(trainX,trainY,save_file):    
     model = Sequential()
-    model.add(LSTM(100, activation='relu', input_shape=(trainX.shape[1], trainX.shape[2]), return_sequences=True))#lstm lag
-    model.add(LSTM(100, activation='relu', return_sequences=False)) #lstm lag
+    model.add(LSTM(500, activation='relu', input_shape=(trainX.shape[1], trainX.shape[2]), return_sequences=True))#lstm lag
+    model.add(LSTM(500, activation='relu', return_sequences=True)) #lstm lag
+    model.add(LSTM(500, activation='relu', return_sequences=False)) #lstm lag
     model.add(Dense(trainY.shape[1]))#NN lag
     model.compile(optimizer='adam', loss='mse')
     model.summary()
-    model.fit(trainX, trainY, epochs=100, batch_size=16, validation_split=0.2, verbose=1)
+    model.fit(trainX, trainY, epochs=35, batch_size=16, validation_split=0.1, verbose=1)
     model.save(save_file)
     return model     
 
@@ -57,13 +58,14 @@ def fit_DNN(trainX,trainY,save_file):
     model.add(layers.Flatten(input_shape=input_shape))  # Flatten the input
     model.add(layers.Dense(1000, activation='relu'))      # Dense layer with 128 units and ReLU activation                      # Dropout layer for regularization
     model.add(layers.Dense(1000, activation='relu'))       # Another Dense layer with 64 units and ReLU activation
+    model.add(layers.Dense(1000, activation='relu'))       # Another Dense layer with 64 units and ReLU activation
     model.add(layers.Dense(trainY.shape[1], activation='relu'))    # Output layer with 10 units for classification (adjust as needed)
 
     # Compile the model
     model.compile(optimizer='adam', loss='mse')
     # Display the model summary
     model.summary()
-    model.fit(trainX, trainY, epochs=100, batch_size=16, validation_split=0.2, verbose=1)
+    model.fit(trainX, trainY, epochs=35, batch_size=16, validation_split=0.1, verbose=1)
     model.save(save_file)
     return model     
 
@@ -168,7 +170,7 @@ def load_LSTM_data(station,cols_to_remove=None,n_future = 24 * 4,n_past = 4 * 4)
             return np.array(X), np.array(Y)
         if lmd_data.shape[1]>0:
             trainX, trainY = create_sequences(normalized_lmd_train,normalized_nwp_train,normalized_power_train, n_past, n_future)
-            testX, testY = create_sequences(normalized_lmd_test,normalized_nwp_test,normalized_power_test, n_past, n_future)            
+            testX, testY = create_sequences(normalized_lmd_test,normalized_nwp_test,normalized_power_test, n_past, n_future)       
         else:
             trainX, trainY = create_sequences(nwp_data=normalized_nwp_train,power_data=normalized_power_train, n_past=n_past, n_future=n_future)
             testX, testY = create_sequences(nwp_data=normalized_nwp_test,power_data=normalized_power_test, n_past=n_past, n_future=n_future)
