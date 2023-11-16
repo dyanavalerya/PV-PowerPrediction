@@ -189,5 +189,42 @@ def load_LSTM_data(station,cols_to_remove=None,n_future = 24 * 4,n_past = 4 * 4)
         print(f'testY shape == {testY.shape}.')
 
     return trainX, trainY, testX, testY
+        
+        
+def get_only_day_data(datafile_path,trainY,testY,predictedData):
+    """_summary_
 
+    Args:
+        datafile_path (string): file path of the file used for training and testing the model
+        trainY (float): The power data used for training
+        testY (float): The power data used for training
+        predictedData (float): The predicted power based on the test datas features
+
+    Returns:
+        trainYDay: returns trainY but the nigth data cropped out
+        testYDay: returns testY but the nigth data cropped out
+        predictedDataDay: returns predictedData but the nigth data cropped out
+    """
+    if os.path.splitext(datafile_path)[1] == '.csv':
+        data = fl.loadFile(datafile_path, PKL=False)
+    else:
+        data = fl.loadFile(datafile_path)
+    data_temp = fl.loadPkl(os.path.splitext(datafile_path)[0] + '.pkl')
+    tempDataIndex=0
+    mask=[]
+    testYDay=[]
+    predictedDataDay=[]
+    trainYDay=[]
+    for i in range(0,len(data)):
+        if tempDataIndex>len(data_temp)-1:
+            break
+        elif data.iloc[i,0] == data_temp.iloc[tempDataIndex,0]:
+            tempDataIndex = tempDataIndex + 1
+            if i<len(trainY):
+                trainYDay =np.append(trainYDay,trainY[i,0,0])
+            else:
+                testYDay =np.append(testYDay,testY[i-len(trainY),0,0])
+                predictedDataDay=np.append(predictedDataDay,predictedData[i-len(trainY),0])
+    return trainYDay, testYDay, predictedDataDay
+                
 
