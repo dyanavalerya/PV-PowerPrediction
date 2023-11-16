@@ -5,6 +5,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import *
 from tensorflow.keras import layers, models
+from keras.models import Sequential
+from keras.layers import LSTM, Dropout, Dense, Conv1D, MaxPooling1D, Flatten, Conv2D,MaxPooling2D,Reshape,ZeroPadding2D,GlobalMaxPooling2D,GRU,Bidirectional
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 from PV_PredictLib import fileLoader as fl
@@ -13,28 +15,6 @@ import pandas as pd
 import pickle
 import keras
 from matplotlib import pyplot as plt
-
-def LSTM_code():
-    trainX,trainY,testX,testY=load_LSTM_data('station00')
-    print(f'trainX shape == {trainX.shape}.')
-    print(f'trainY shape == {trainY.shape}.')
-    print(f'testX shape == {testX.shape}.')
-    print(f'testY shape == {testY.shape}.')
-
-    #fit_LSTM(trainX,trainY)
-
-    reconstructed_model = keras.models.load_model("my_model.keras")
-    pred=reconstructed_model.predict(trainX)
-
-    x = list(range(testY.shape[1]))
-    plt.figure()
-    plt.plot(x,pred[:,0], label='predicted')
-    plt.plot(x,testY[:,0], label='original')
-    plt.legend()
-    plt.show()
-
-    print('done')
-
 
 def fit_LSTM(trainX,trainY,save_file):    
     model = Sequential()
@@ -108,7 +88,7 @@ def normalize_dataframes(*dfs):
     return normalized_dfs
 
 
-def remove_cols(data, cols_to_remove=['nwp_winddirection', 'lmd_winddirection', 'lmd_pressure', 'nwp_pressure', 'date_time', 'station','nwp_humidity']):
+def remove_cols(data, cols_to_remove=['nwp_winddirection', 'lmd_winddirection', 'lmd_pressure', 'nwp_pressure', 'date_time', 'station','nwp_humidity','nwp_hmd_diffuseirrad','lmd_hmd_directirrad']):
     cols = [col for col in data.columns if col not in cols_to_remove]
     print('columns that are used: ',cols)
     data=data[cols]
@@ -188,8 +168,7 @@ def load_LSTM_data(station,cols_to_remove=None,n_future = 24 * 4,n_past = 4 * 4)
         print(f'testX shape == {testX.shape}.')
         print(f'testY shape == {testY.shape}.')
 
-    return trainX, trainY, testX, testY
-        
+    return trainX, trainY, testX, testY        
         
 def get_only_day_data(datafile_path,trainY,testY,predictedData):
     """_summary_
