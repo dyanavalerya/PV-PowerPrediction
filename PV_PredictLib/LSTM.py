@@ -94,7 +94,7 @@ def remove_cols(data, cols_to_remove=['nwp_winddirection', 'lmd_winddirection', 
     data=data[cols]
     return data
 
-def load_LSTM_data(station,cols_to_remove=None,n_future = 24 * 4,n_past = 4 * 4):
+def load_LSTM_data(station,cols_to_remove=None,n_future = 24 * 4,n_past = 1):
     station_name = os.path.splitext(station)[0]
     file_format = os.path.splitext(station)[1]
     file_path = station_name+'LSTM.pkl'
@@ -133,7 +133,7 @@ def load_LSTM_data(station,cols_to_remove=None,n_future = 24 * 4,n_past = 4 * 4)
         
         file_path = station_name+'LSTM.pkl'
 
-        def create_sequences(lmd_data=None,nwp_data=None,power_data=None, n_past=4*4, n_future=24*4):
+        def create_sequences(lmd_data=None,nwp_data=None,power_data=None, n_past=1, n_future=24*4):
             X, Y = [], []
             if n_past>0:
                 for i in range(n_past, len(nwp_data) - n_future+1 ):
@@ -155,19 +155,70 @@ def load_LSTM_data(station,cols_to_remove=None,n_future = 24 * 4,n_past = 4 * 4)
             trainX, trainY = create_sequences(nwp_data=normalized_nwp_train,power_data=normalized_power_train, n_past=n_past, n_future=n_future)
             testX, testY = create_sequences(nwp_data=normalized_nwp_test,power_data=normalized_power_test, n_past=n_past, n_future=n_future)
 
-        
         # Open a file for writing
         with open(file_path, 'wb') as file:
             pickle.dump(trainX, file)
             pickle.dump(trainY, file)
             pickle.dump(testX, file)
             pickle.dump(testY, file)
-            pickle.dump(first_day_in_test,file)
 
-        print(f'trainX shape == {trainX.shape}.')
-        print(f'trainY shape == {trainY.shape}.')
-        print(f'testX shape == {testX.shape}.')
-        print(f'testY shape == {testY.shape}.')
+    return trainX, trainY, testX, testY
 
-    return trainX, trainY, testX, testY,first_day_in_test
+def load_LSTM_data_train_day_test_both(station,cols_to_remove=None,n_future = 24 * 4,n_past = 1):
+    file_path = station+'_LSTM_data_train_day_test_both.pkl'
+    if os.path.isfile(file_path):
+        print(f'The file {file_path} exists ')
+        with open(file_path, 'rb') as file:
+            trainX = pickle.load(file)
+            trainY = pickle.load(file) 
+            testX = pickle.load(file) 
+            testY = pickle.load(file)
+
+        print('and have been downloaded')
+    else:
+        print(f'The file {file_path} does not exist, so the dataset is being split up for the first time')
+        data_day=fl.loadFile(station+'.pkl')
+        data_night=fl.loadFile(station+'.csv',PKL=False)
+
+        first_day_in_test=data_day.iloc[int(data_day.shape[0] * 0.8), 0]
+        first_day_in_test = pd.to_datetime(first_day_in_test)
+
+        data_day=remove_cols(data_day,cols_to_remove)
+        data_night=remove_cols(data_night,cols_to_remove)
+        data_night = data_night.loc[data_night.index >= first_day_in_test]
+        data_day = data_day.loc[data_day.index <= first_day_in_test]
+
+        lmd_data_day, nwp_data_day, power_data_day = split_dataframe_columns(data_day)
+        lmd_data_night, nwp_data_night, power_data_night = split_dataframe_columns(data_night)
+
+        normalized_lmd_day, normalized_nwp_day, normalized_power_day = normalize_dataframes(lmd_data_day, nwp_data_day, power_data_day)
+        normalized_lmd_night, normalized_nwp_night, normalized_power_night = normalize_dataframes(lmd_data_night, nwp_data_night, power_data_night)
+
+        def create_sequences(lmd_data=None,nwp_data=None,power_data=None, n_past=1, n_future=24*4):
+            X, Y = [], []
+            if n_past>0:
+                for i in range(n_past, len(nwp_data) - n_future+1 ):
+                    past=lmd_data[i - n_past:i, :lmd_data.shape[1]]
+                    future=nwp_data[i:i+n_future, :nwp_data.shape[1]]
+                    combined_data = np.concatenate((past, future), axis=0)
+                    X.append(combined_data)
+                    Y.append(power_data[i:i+n_future])
+            else:
+                for i in range(0, len(nwp_data) - n_future+1 ):
+                    future=nwp_data[i:i+n_future, :nwp_data.shape[1]]
+                    X.append(future)
+                    Y.append(power_data[i:i+n_future])
+            return np.array(X), np.array(Y)
+        
+        trainX, trainY = create_sequences(normalized_lmd_day, normalized_nwp_day, normalized_power_day, n_past, n_future)
+        testX, testY = create_sequences(normalized_lmd_night, normalized_nwp_night, normalized_power_night, n_past, n_future)
+
+        # Open a file for writing
+        with open(file_path, 'wb') as file:
+            pickle.dump(trainX, file)
+            pickle.dump(trainY, file)
+            pickle.dump(testX, file)
+            pickle.dump(testY, file)
+
+    return trainX, trainY, testX, testY
 
