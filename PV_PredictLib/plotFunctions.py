@@ -338,3 +338,37 @@ def plotAvgPowerVsCap():
 
 
 
+def windDirectionPowerApprox(data):
+    # Extract columns
+    power = data['power']
+    wind_direction_lmd = data['lmd_winddirection']
+    wind_direction_nwp = data['nwp_winddirection']
+
+    # Convert wind_direction to radians
+    wind_direction_rad_lmd = np.radians(wind_direction_lmd)
+    wind_direction_rad_nwp = np.radians(wind_direction_nwp)
+
+    # Create matrix A
+    A_lmd = np.vstack((np.sin(wind_direction_rad_lmd), np.cos(wind_direction_rad_lmd))).T
+    A_nwp = np.vstack((np.sin(wind_direction_rad_nwp), np.cos(wind_direction_rad_nwp))).T
+
+    # Calculate conditioning number of A
+    conditioning_number_lmd = np.linalg.cond(A_lmd)
+    conditioning_number_nwp = np.linalg.cond(A_nwp)
+
+    # Calculate coefficients
+    x_n_lmd = np.linalg.inv(A_lmd.T @ A_lmd) @ A_lmd.T @ power
+    x_n_nwp = np.linalg.inv(A_nwp.T @ A_nwp) @ A_nwp.T @ power
+
+    # Calculate regression
+    Reg_lmd = A_lmd @ x_n_lmd
+    Reg_nwp = A_nwp @ x_n_nwp
+
+    # Calculate correlation coefficient
+    correlation_lmd = np.corrcoef(Reg_lmd, power)[0, 1]
+    correlation_nwp = np.corrcoef(Reg_nwp, power)[0, 1]
+
+    print("Conditioning number lmd:", conditioning_number_lmd,'; nwp:',conditioning_number_nwp)
+    print("Coefficients (a1, a2) for lmd:", x_n_lmd,'; for nwp:',x_n_nwp)
+    print("Correlation coefficient lmd:", correlation_lmd,'; for nwp:',correlation_nwp)
+    return Reg_lmd,Reg_nwp
