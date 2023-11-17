@@ -3,8 +3,11 @@ import os, sys
 print(f"Setting syspath to include base folder: {os.path.dirname(os.path.dirname(os.path.abspath(__file__)))}") 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from tensorflow.keras.models import Sequential
+from tensorflow.keras.models import Model
 from tensorflow.keras.layers import *
 from tensorflow.keras import layers, models
+from keras.models import Sequential
+from keras.layers import LSTM, Dropout, Dense, Conv1D, MaxPooling1D, Flatten, Conv2D,MaxPooling2D,Reshape,ZeroPadding2D,GlobalMaxPooling2D,GRU,Bidirectional
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 from PV_PredictLib import fileLoader as fl
@@ -14,30 +17,21 @@ import pickle
 import keras
 from matplotlib import pyplot as plt
 
-def LSTM_code():
-    trainX,trainY,testX,testY=load_LSTM_data('station00')
-    print(f'trainX shape == {trainX.shape}.')
-    print(f'trainY shape == {trainY.shape}.')
-    print(f'testX shape == {testX.shape}.')
-    print(f'testY shape == {testY.shape}.')
 
-    #fit_LSTM(trainX,trainY)
+def fit_LSTM(trainX,trainY,save_file,num_neurons=500,num_layers=3,epochs=10,batch_size=16,validation_split=0.1):    
+    model = Sequential()
+    model.add(LSTM(num_neurons, input_shape=(trainX.shape[1], trainX.shape[2]), return_sequences=True))#lstm lag
+    for i in range(num_layers-1):
+        model.add(LSTM(num_neurons, return_sequences=True)) #lstm lag
+    model.add(LSTM(num_neurons, return_sequences=False)) #lstm lag
+    model.add(Dense(trainY.shape[1]))#NN lag
+    model.compile(optimizer='adam', loss='mse')
+    model.summary()
+    model.fit(trainX, trainY, epochs=epochs, batch_size=batch_size, validation_split=validation_split, verbose=1)
+    model.save('A_lot_of_models/'+save_file)
+    return model     
 
-    reconstructed_model = keras.models.load_model("my_model.keras")
-    pred=reconstructed_model.predict(trainX)
-
-    x = list(range(testY.shape[1]))
-    plt.figure()
-    plt.plot(x,pred[:,0], label='predicted')
-    plt.plot(x,testY[:,0], label='original')
-    plt.legend()
-    plt.show()
-
-    print('done')
-
-
-def fit_LSTM(trainX,trainY,save_file):
-    """
+def fit_DNN(trainX,trainY,save_file):
     input_shape = (trainX.shape[1], trainX.shape[2])
 
     # Create a sequential model
@@ -47,24 +41,18 @@ def fit_LSTM(trainX,trainY,save_file):
     model.add(layers.Flatten(input_shape=input_shape))  # Flatten the input
     model.add(layers.Dense(1000, activation='relu'))      # Dense layer with 128 units and ReLU activation                      # Dropout layer for regularization
     model.add(layers.Dense(1000, activation='relu'))       # Another Dense layer with 64 units and ReLU activation
+    model.add(layers.Dense(1000, activation='relu'))       # Another Dense layer with 64 units and ReLU activation
     model.add(layers.Dense(trainY.shape[1], activation='relu'))    # Output layer with 10 units for classification (adjust as needed)
 
     # Compile the model
     model.compile(optimizer='adam', loss='mse')
     # Display the model summary
     model.summary()
-    """
-
-    
-    model = Sequential()
-    model.add(LSTM(100, activation='relu', input_shape=(trainX.shape[1], trainX.shape[2]), return_sequences=True))#lstm lag
-    model.add(LSTM(100, activation='relu', return_sequences=False)) #lstm lag
-    model.add(Dense(trainY.shape[1]))#NN lag
-    model.compile(optimizer='adam', loss='mse')
-    model.summary()
-    model.fit(trainX, trainY, epochs=10, batch_size=16, validation_split=0.1, verbose=1)
+    model.fit(trainX, trainY, epochs=35, batch_size=16, validation_split=0.1, verbose=1)
     model.save(save_file)
     return model     
+
+    
 
 def split_dataframe_columns(df):
     """
@@ -103,14 +91,16 @@ def normalize_dataframes(*dfs):
     return normalized_dfs
 
 
-def remove_cols(data, cols_to_remove=['nwp_winddirection', 'lmd_winddirection', 'lmd_pressure', 'nwp_pressure', 'date_time', 'station','nwp_humidity']):
+def remove_cols(data, cols_to_remove=['nwp_winddirection', 'lmd_winddirection', 'lmd_pressure', 'nwp_pressure', 'date_time', 'station','nwp_humidity','nwp_hmd_diffuseirrad','lmd_hmd_directirrad']):
     cols = [col for col in data.columns if col not in cols_to_remove]
     print('columns that are used: ',cols)
     data=data[cols]
     return data
 
-def load_LSTM_data(station,cols_to_remove=None,n_future = 24 * 4,n_past = 4 * 4):
-    file_path = station+'LSTM.pkl'
+def load_LSTM_data(station,cols_to_remove=None,n_future = 24 * 4,n_past = 1):
+    station_name = os.path.splitext(station)[0]
+    file_format = os.path.splitext(station)[1]
+    file_path = station_name+'LSTM.pkl'
     if os.path.isfile(file_path):
         print(f'The file {file_path} exists ')
         with open(file_path, 'rb') as file:
@@ -121,7 +111,10 @@ def load_LSTM_data(station,cols_to_remove=None,n_future = 24 * 4,n_past = 4 * 4)
         print('and have been downloaded')
     else:
         print(f'The file {file_path} does not exist, so the dataset is being split up for the first time')
-        data=fl.loadFile(station+'.csv',PKL=False)
+        if file_format == '.csv':
+            data=fl.loadFile(station_name+'.csv',PKL=False)
+        else:
+            data = fl.loadPkl(station_name + '.pkl')
 
         data=remove_cols(data,cols_to_remove)
         
@@ -141,9 +134,9 @@ def load_LSTM_data(station,cols_to_remove=None,n_future = 24 * 4,n_past = 4 * 4)
         normalized_power_train = normalized_power[:int(normalized_power.shape[0] * 0.8), :]
         normalized_power_test = normalized_power[int(normalized_power.shape[0] * 0.8):, :]
         
-        file_path = 'station00LSTM.pkl'
+        file_path = station_name+'LSTM.pkl'
 
-        def create_sequences(lmd_data=None,nwp_data=None,power_data=None, n_past=4*4, n_future=24*4):
+        def create_sequences(lmd_data=None,nwp_data=None,power_data=None, n_past=1, n_future=24*4):
             X, Y = [], []
             if n_past>0:
                 for i in range(n_past, len(nwp_data) - n_future+1 ):
@@ -160,12 +153,11 @@ def load_LSTM_data(station,cols_to_remove=None,n_future = 24 * 4,n_past = 4 * 4)
             return np.array(X), np.array(Y)
         if lmd_data.shape[1]>0:
             trainX, trainY = create_sequences(normalized_lmd_train,normalized_nwp_train,normalized_power_train, n_past, n_future)
-            testX, testY = create_sequences(normalized_lmd_test,normalized_nwp_test,normalized_power_test, n_past, n_future)            
+            testX, testY = create_sequences(normalized_lmd_test,normalized_nwp_test,normalized_power_test, n_past, n_future)       
         else:
             trainX, trainY = create_sequences(nwp_data=normalized_nwp_train,power_data=normalized_power_train, n_past=n_past, n_future=n_future)
             testX, testY = create_sequences(nwp_data=normalized_nwp_test,power_data=normalized_power_test, n_past=n_past, n_future=n_future)
 
-        
         # Open a file for writing
         with open(file_path, 'wb') as file:
             pickle.dump(trainX, file)
@@ -173,11 +165,104 @@ def load_LSTM_data(station,cols_to_remove=None,n_future = 24 * 4,n_past = 4 * 4)
             pickle.dump(testX, file)
             pickle.dump(testY, file)
 
-        print(f'trainX shape == {trainX.shape}.')
-        print(f'trainY shape == {trainY.shape}.')
-        print(f'testX shape == {testX.shape}.')
-        print(f'testY shape == {testY.shape}.')
-
     return trainX, trainY, testX, testY
+
+def load_LSTM_data_train_day_test_both(station,cols_to_remove=None,n_future = 24 * 4,n_past = 1):
+    file_path = station+'_LSTM_data_train_day_test_both.pkl'
+    if os.path.isfile(file_path):
+        print(f'The file {file_path} exists ')
+        with open(file_path, 'rb') as file:
+            trainX = pickle.load(file)
+            trainY = pickle.load(file) 
+            testX = pickle.load(file) 
+            testY = pickle.load(file)
+
+        print('and have been downloaded')
+    else:
+        print(f'The file {file_path} does not exist, so the dataset is being split up for the first time')
+        data_day=fl.loadFile(station+'.pkl')
+        data_night=fl.loadFile(station+'.csv',PKL=False)
+
+        first_day_in_test=data_day.iloc[int(data_day.shape[0] * 0.8), 0]
+        first_day_in_test = pd.to_datetime(first_day_in_test)
+
+        data_day=remove_cols(data_day,cols_to_remove)
+        data_night=remove_cols(data_night,cols_to_remove)
+        data_night = data_night.loc[data_night.index >= first_day_in_test]
+        data_day = data_day.loc[data_day.index <= first_day_in_test]
+
+        lmd_data_day, nwp_data_day, power_data_day = split_dataframe_columns(data_day)
+        lmd_data_night, nwp_data_night, power_data_night = split_dataframe_columns(data_night)
+
+        normalized_lmd_day, normalized_nwp_day, normalized_power_day = normalize_dataframes(lmd_data_day, nwp_data_day, power_data_day)
+        normalized_lmd_night, normalized_nwp_night, normalized_power_night = normalize_dataframes(lmd_data_night, nwp_data_night, power_data_night)
+
+        def create_sequences(lmd_data=None,nwp_data=None,power_data=None, n_past=1, n_future=24*4):
+            X, Y = [], []
+            if n_past>0:
+                for i in range(n_past, len(nwp_data) - n_future+1 ):
+                    past=lmd_data[i - n_past:i, :lmd_data.shape[1]]
+                    future=nwp_data[i:i+n_future, :nwp_data.shape[1]]
+                    combined_data = np.concatenate((past, future), axis=0)
+                    X.append(combined_data)
+                    Y.append(power_data[i:i+n_future])
+            else:
+                for i in range(0, len(nwp_data) - n_future+1 ):
+                    future=nwp_data[i:i+n_future, :nwp_data.shape[1]]
+                    X.append(future)
+                    Y.append(power_data[i:i+n_future])
+            return np.array(X), np.array(Y)
+        
+        trainX, trainY = create_sequences(normalized_lmd_day, normalized_nwp_day, normalized_power_day, n_past, n_future)
+        testX, testY = create_sequences(normalized_lmd_night, normalized_nwp_night, normalized_power_night, n_past, n_future)
+
+        # Open a file for writing
+        with open(file_path, 'wb') as file:
+            pickle.dump(trainX, file)
+            pickle.dump(trainY, file)
+            pickle.dump(testX, file)
+            pickle.dump(testY, file)
+
+    return trainX, trainY, testX, testY        
+        
+def get_only_day_data(datafile_path,trainY,testY,predictedData):
+    """_summary_
+
+    Args:
+        datafile_path (string): file path of the file used for training and testing the model
+        trainY (float): The power data used for training
+        testY (float): The power data used for training
+        predictedData (float): The predicted power based on the test datas features
+
+    Returns:
+        trainYDay: returns trainY but the nigth data cropped out
+        testYDay: returns testY but the nigth data cropped out
+        predictedDataDay: returns predictedData but the nigth data cropped out
+    """
+    if os.path.splitext(datafile_path)[1] == '.csv':
+        data = fl.loadFile(datafile_path, PKL=False)
+    else:
+        data = fl.loadFile(datafile_path)
+    data_temp = fl.loadPkl(os.path.splitext(datafile_path)[0] + '.pkl')
+    tempDataIndex=0
+    mask=[]
+    testYDay=[]
+    predictedDataDay=[]
+    trainYDay=[]
+    for i in range(0,len(data)):
+        if tempDataIndex>len(data_temp)-1:
+            break
+        elif data.iloc[i,0] == data_temp.iloc[tempDataIndex,0]:
+            tempDataIndex = tempDataIndex + 1
+            if i<len(trainY):
+                trainYDay =np.append(trainYDay,trainY[i,0,0])
+            else:
+                testYDay =np.append(testYDay,testY[i-len(trainY),0,0])
+                predictedDataDay=np.append(predictedDataDay,predictedData[i-len(trainY),0])
+    return trainYDay, testYDay, predictedDataDay
+                
+
+
+
 
 
