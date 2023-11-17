@@ -162,6 +162,7 @@ cython_debug/
 #Local file Jeppe
 jeppe.py
 JakobtestFile.py
+JakobTestFileStationaer.py
 gustav.py
 .vscode/settings.json
 station00LSTM.pkl

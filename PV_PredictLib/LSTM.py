@@ -3,6 +3,7 @@ import os, sys
 print(f"Setting syspath to include base folder: {os.path.dirname(os.path.dirname(os.path.abspath(__file__)))}") 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from tensorflow.keras.models import Sequential
+from tensorflow.keras.models import Model
 from tensorflow.keras.layers import *
 from tensorflow.keras import layers, models
 from keras.models import Sequential
@@ -16,16 +17,18 @@ import pickle
 import keras
 from matplotlib import pyplot as plt
 
-def fit_LSTM(trainX,trainY,save_file):    
+
+def fit_LSTM(trainX,trainY,save_file,num_neurons=500,num_layers=3,epochs=10,batch_size=16,validation_split=0.1):    
     model = Sequential()
-    model.add(LSTM(200, activation='relu', input_shape=(trainX.shape[1], trainX.shape[2]), return_sequences=True))#lstm lag
-    model.add(LSTM(200, activation='relu', return_sequences=True)) #lstm lag
-    model.add(LSTM(200, activation='relu', return_sequences=False)) #lstm lag
+    model.add(LSTM(num_neurons, input_shape=(trainX.shape[1], trainX.shape[2]), return_sequences=True))#lstm lag
+    for i in range(num_layers-1):
+        model.add(LSTM(num_neurons, return_sequences=True)) #lstm lag
+    model.add(LSTM(num_neurons, return_sequences=False)) #lstm lag
     model.add(Dense(trainY.shape[1]))#NN lag
     model.compile(optimizer='adam', loss='mse')
     model.summary()
-    model.fit(trainX, trainY, epochs=5, batch_size=16, validation_split=0.1, verbose=1)
-    model.save(save_file)
+    model.fit(trainX, trainY, epochs=epochs, batch_size=batch_size, validation_split=validation_split, verbose=1)
+    model.save('A_lot_of_models/'+save_file)
     return model     
 
 def fit_DNN(trainX,trainY,save_file):
