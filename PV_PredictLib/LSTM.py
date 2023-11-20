@@ -28,7 +28,7 @@ def fit_LSTM(trainX,trainY,save_file,num_neurons=500,num_layers=3,epochs=10,batc
     model.compile(optimizer='adam', loss='mse')
     model.summary()
     model.fit(trainX, trainY, epochs=epochs, batch_size=batch_size, validation_split=validation_split, verbose=1)
-    model.save('A_lot_of_models/'+save_file)
+    #model.save('A_lot_of_models/'+save_file)
     return model     
 
 def fit_DNN(trainX,trainY,save_file):
@@ -51,8 +51,6 @@ def fit_DNN(trainX,trainY,save_file):
     model.fit(trainX, trainY, epochs=35, batch_size=16, validation_split=0.1, verbose=1)
     model.save(save_file)
     return model     
-
-    
 
 def split_dataframe_columns(df):
     """
@@ -89,7 +87,6 @@ def normalize_dataframes(*dfs):
     normalized_dfs = tuple(scaler.fit_transform(df) for df in dfs)
 
     return normalized_dfs
-
 
 def remove_cols(data, cols_to_remove=['nwp_winddirection', 'lmd_winddirection', 'lmd_pressure', 'nwp_pressure', 'date_time', 'station','nwp_humidity','nwp_hmd_diffuseirrad','lmd_hmd_directirrad']):
     cols = [col for col in data.columns if col not in cols_to_remove]
@@ -188,33 +185,44 @@ def load_LSTM_data_train_day_test_both(station,cols_to_remove=None,n_future = 24
 
         data_day=remove_cols(data_day,cols_to_remove)
         data_night=remove_cols(data_night,cols_to_remove)
+        data_night = data_night[data_day.columns]
         data_night = data_night.loc[data_night.index >= first_day_in_test]
         data_day = data_day.loc[data_day.index <= first_day_in_test]
 
-        lmd_data_day, nwp_data_day, power_data_day = split_dataframe_columns(data_day)
-        lmd_data_night, nwp_data_night, power_data_night = split_dataframe_columns(data_night)
+        # Create a MinMaxScaler instance
+        scaler = MinMaxScaler()
 
-        normalized_lmd_day, normalized_nwp_day, normalized_power_day = normalize_dataframes(lmd_data_day, nwp_data_day, power_data_day)
-        normalized_lmd_night, normalized_nwp_night, normalized_power_night = normalize_dataframes(lmd_data_night, nwp_data_night, power_data_night)
+        # Fit and transform the DataFrame using MinMaxScaler
+        scaler.fit(data_day)
+
+        scaled_data_night = scaler.transform(data_night)
+        scaled_data_day = scaler.transform(data_day)
+
+        # Convert the scaled data back to a DataFrame
+        data_day_scaled = pd.DataFrame(scaled_data_day, columns=data_day.columns, index=data_day.index)
+        data_night_scaled = pd.DataFrame(scaled_data_night, columns=data_night.columns, index=data_night.index)
+
+        lmd_data_day, nwp_data_day, power_data_day = split_dataframe_columns(data_day_scaled)
+        lmd_data_night, nwp_data_night, power_data_night = split_dataframe_columns(data_night_scaled)
 
         def create_sequences(lmd_data=None,nwp_data=None,power_data=None, n_past=1, n_future=24*4):
             X, Y = [], []
             if n_past>0:
                 for i in range(n_past, len(nwp_data) - n_future+1 ):
-                    past=lmd_data[i - n_past:i, :lmd_data.shape[1]]
-                    future=nwp_data[i:i+n_future, :nwp_data.shape[1]]
+                    past=lmd_data.iloc[i - n_past:i, :lmd_data.shape[1]]
+                    future=nwp_data.iloc[i:i+n_future, :nwp_data.shape[1]]
                     combined_data = np.concatenate((past, future), axis=0)
                     X.append(combined_data)
                     Y.append(power_data[i:i+n_future])
             else:
                 for i in range(0, len(nwp_data) - n_future+1 ):
-                    future=nwp_data[i:i+n_future, :nwp_data.shape[1]]
+                    future=nwp_data.iloc[i:i+n_future, :nwp_data.shape[1]]
                     X.append(future)
-                    Y.append(power_data[i:i+n_future])
+                    Y.append(power_data.iloc[i:i+n_future])
             return np.array(X), np.array(Y)
         
-        trainX, trainY = create_sequences(normalized_lmd_day, normalized_nwp_day, normalized_power_day, n_past, n_future)
-        testX, testY = create_sequences(normalized_lmd_night, normalized_nwp_night, normalized_power_night, n_past, n_future)
+        trainX, trainY = create_sequences(lmd_data_day, nwp_data_day, power_data_day, n_past, n_future)
+        testX, testY = create_sequences(lmd_data_night, nwp_data_night, power_data_night, n_past, n_future)
 
         # Open a file for writing
         with open(file_path, 'wb') as file:
@@ -255,14 +263,82 @@ def get_only_day_data(datafile_path,trainY,testY,predictedData):
         elif data.iloc[i,0] == data_temp.iloc[tempDataIndex,0]:
             tempDataIndex = tempDataIndex + 1
             if i<len(trainY):
-                trainYDay =np.append(trainYDay,trainY[i,0,0])
+                trainYDay =np.append(trainYDay,trainY[i,:,0])
             else:
-                testYDay =np.append(testYDay,testY[i-len(trainY),0,0])
-                predictedDataDay=np.append(predictedDataDay,predictedData[i-len(trainY),0])
+                testYDay.append(testY[i-len(trainY),:,0])
+                predictedDataDay.append(predictedData[i-len(trainY),:])
     return trainYDay, testYDay, predictedDataDay
-                
+
+def load_LSTM_zero_padded(file_path,station_string):
+    station_file_path=station_string+'.csv'
+
+    if os.path.isfile(file_path):
+        print(f'The file {file_path} exists ')
+        with open(file_path, 'rb') as file:
+            trainX = pickle.load(file)
+            trainY = pickle.load(file) 
+            testX = pickle.load(file) 
+            testY = pickle.load(file)
+
+        print('and have been downloaded')
+    else:        
+        # Load the DataFrames
+        data_with_night = fl.loadFile(station_file_path, PKL=False)
+        data_without_night = fl.loadFile(station_file_path, PKL=True)
+
+        #remove colums 
+        data_with_night_cols=remove_cols(data_with_night)
+
+        #scale 
+        scaler = MinMaxScaler()
+        scaler.fit(data_with_night_cols)
+        data_scaled=scaler.transform(data_with_night_cols)
+        df_scaled_night = pd.DataFrame(data_scaled, columns=data_with_night_cols.columns, index=data_with_night_cols.index)
+
+        # Extract the 'date_time' column values from both DataFrames
+        date_time_without_night = data_without_night['date_time']
+
+        # Create boolean masks based on whether 'date_time' values appear in both DataFrames
+        mask_with_night = df_scaled_night.index.isin(date_time_without_night)
+
+        # Set entries to a specific value where 'date_time' values do not appear in both DataFrames
+        df_scaled_night.loc[~mask_with_night, :] = 0
+
+        #split data
+        lmd_data, nwp_data, power_data = split_dataframe_columns(df_scaled_night)
+
+        def create_sequences(lmd_data=None,nwp_data=None,power_data=None, n_past=1, n_future=24*4):
+                X, Y = [], []
+                for i in range(n_past, len(nwp_data) - n_future+1 ):
+                    past=lmd_data.iloc[i - n_past:i, :lmd_data.shape[1]]
+                    future=nwp_data.iloc[i:i+n_future, :nwp_data.shape[1]]
+                    combined_data = np.concatenate((past, future), axis=0)
+                    X.append(combined_data)
+                    Y.append(power_data[i:i+n_future])
+                return np.array(X), np.array(Y)
+        
+        x_data,y_data=create_sequences(lmd_data,nwp_data,power_data)
+
+        # Assuming x_data and y_data are your input and output data arrays
+        total_samples = x_data.shape[0]
+        split_index = int(0.8 * total_samples)
+
+        # Training data
+        trainX = x_data[:split_index]
+        trainY = y_data[:split_index]
+
+        # Testing data
+        testX = x_data[split_index:]
+        testY = y_data[split_index:]
 
 
+        # Open a file for writing
+        with open(file_path, 'wb') as file:
+            pickle.dump(trainX, file)
+            pickle.dump(trainY, file)
+            pickle.dump(testX, file)
+            pickle.dump(testY, file)
 
+    return trainX,trainY,testX,testY
 
-
+    
