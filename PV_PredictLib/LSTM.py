@@ -88,7 +88,7 @@ def normalize_dataframes(*dfs):
 
     return normalized_dfs
 
-def remove_cols(data, cols_to_remove=['nwp_winddirection', 'lmd_winddirection', 'lmd_pressure', 'nwp_pressure', 'date_time', 'station','nwp_humidity','nwp_hmd_diffuseirrad','lmd_hmd_directirrad']):
+def remove_cols(data, cols_to_remove=['nwp_winddirection', 'lmd_winddirection', 'lmd_pressure', 'nwp_pressure', 'date_time', 'station','nwp_hmd_diffuseirrad','lmd_hmd_directirrad']):
     cols = [col for col in data.columns if col not in cols_to_remove]
     print('columns that are used: ',cols)
     data=data[cols]
@@ -306,12 +306,18 @@ def load_LSTM_zero_padded(file_path,station_string):
 
         #split data
         lmd_data, nwp_data, power_data = split_dataframe_columns(df_scaled_night)
+        #lmd_total,lmd_diffuse,lmd_temp,lmd_windspeed
+        #nwp_global,nwp_direct,nwp,temp,nwp_windspeed
 
         def create_sequences(lmd_data=None,nwp_data=None,power_data=None, n_past=1, n_future=24*4):
                 X, Y = [], []
                 for i in range(n_past, len(nwp_data) - n_future+1 ):
                     past=lmd_data.iloc[i - n_past:i, :lmd_data.shape[1]]
                     future=nwp_data.iloc[i:i+n_future, :nwp_data.shape[1]]
+                    past=np.array(past)
+                    past = past.reshape(past.shape[0]*past.shape[1])
+                    future=np.array(future)
+                    future = future.reshape(future.shape[0]*future.shape[1])
                     combined_data = np.concatenate((past, future), axis=0)
                     X.append(combined_data)
                     Y.append(power_data[i:i+n_future])
