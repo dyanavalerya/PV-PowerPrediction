@@ -24,11 +24,11 @@ def fit_LSTM(trainX,trainY,save_file,num_neurons=500,num_layers=3,epochs=10,batc
     for i in range(num_layers-1):
         model.add(LSTM(num_neurons, return_sequences=True)) #lstm lag
     model.add(LSTM(num_neurons, return_sequences=False)) #lstm lag
-    model.add(Dense(trainY.shape[1]))#NN lag
+    model.add(Dense(trainY.shape[1], activation=ReLU(max_value=1.0)))#NN lag
     model.compile(optimizer='adam', loss='mse')
     model.summary()
     model.fit(trainX, trainY, epochs=epochs, batch_size=batch_size, validation_split=validation_split, verbose=1)
-    #model.save('A_lot_of_models/'+save_file)
+    model.save(save_file)
     return model     
 
 def fit_DNN(trainX,trainY,save_file):
@@ -139,7 +139,7 @@ def load_LSTM_data(station,cols_to_remove=None,n_future = 24 * 4,n_past = 1):
                 for i in range(n_past, len(nwp_data) - n_future+1 ):
                     past=lmd_data[i - n_past:i, :lmd_data.shape[1]]
                     future=nwp_data[i:i+n_future, :nwp_data.shape[1]]
-                    combined_data = np.concatenate((past, future), axis=0)
+                    combined_data = np.concatenate((past, future), axis=1)
                     X.append(combined_data)
                     Y.append(power_data[i:i+n_future])
             else:
