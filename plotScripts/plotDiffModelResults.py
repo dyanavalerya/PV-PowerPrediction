@@ -20,18 +20,24 @@ from scipy.interpolate import griddata
 
 def main():
     # Importing results
-    file_path = "diffModelResult.pkl"
+    file_path = "/Users/jakob/Desktop/A_lot_of_models2/diffModelResult2.pkl"
     temp = open(file_path, 'rb')
     results_df = pickle.load(temp)
     temp.close()  
     
+    results_df = results_df[results_df['MSE'] <= 0.1]
+    
+    
     # Extract the columns
     num_layers = results_df['Num Layers']
     num_neurons = results_df['Num Neurons']
+    batch_size = results_df['Batch Size']
+    val_split = results_df['Validation Split']
+    
     mse = results_df['MSE']
+    R_squared = results_df['R^2']
     
     df_sorted = results_df.sort_values(by='MSE')
-    
     mse_dict = {}
 
     # Loop through unique values and create vectors
@@ -44,28 +50,58 @@ def main():
     neuron400Mean = np.mean(results_df.loc[results_df['Num Neurons'] == 400, 'MSE'].values)
     neuron800Mean = np.mean(results_df.loc[results_df['Num Neurons'] == 800, 'MSE'].values)
     
-    batch2Mean = np.mean(results_df.loc[results_df['Batch Size'] == 2, 'MSE'].values)
     batch4Mean = np.mean(results_df.loc[results_df['Batch Size'] == 4, 'MSE'].values)
     batch8Mean = np.mean(results_df.loc[results_df['Batch Size'] == 8, 'MSE'].values)
     batch16Mean = np.mean(results_df.loc[results_df['Batch Size'] == 16, 'MSE'].values)
     
     val00Mean = np.mean(results_df.loc[results_df['Validation Split'] == 0.0, 'MSE'].values)
     val01Mean = np.mean(results_df.loc[results_df['Validation Split'] == 0.1, 'MSE'].values)
-    val02Mean = np.mean(results_df.loc[results_df['Validation Split'] == 0.2, 'MSE'].values)
     
 
     # Create a scatter plot
+    plt.figure(1)
     plt.scatter(num_layers, mse, marker='o', color='blue')
     plt.scatter(1, layer1Mean, marker='o',s=100 , color='red', label='Layer 1 Mean')
-    plt.scatter(2, layer2Mean, marker='o',s=100, color='red', label='Layer 1 Mean')
-    plt.scatter(3, layer3Mean, marker='o',s=100, color='red', label='Layer 1 Mean')
+    plt.scatter(2, layer2Mean, marker='o',s=100, color='red', label='Layer 2 Mean')
+    plt.scatter(3, layer3Mean, marker='o',s=100, color='red', label='Layer 3 Mean')
+
+    # Set labels and title
+    plt.xlabel('Number of Layers')
+    plt.ylabel('Mean Squared Error (MSE)')
+    plt.title('Scatter Plot of Number of Layers vs MSE')
+    
+    plt.figure(2)
+    plt.scatter(num_neurons, mse, marker='o', color='blue')
+    plt.scatter(100, neuron100Mean, marker='o',s=100 , color='red', label='Neuron 100 Mean')
+    plt.scatter(200, neuron200Mean, marker='o',s=100, color='red', label='Neuron 200 Mean')
+    plt.scatter(400, neuron400Mean, marker='o',s=100, color='red', label='Neuron 400 Mean')
+    plt.scatter(800, neuron800Mean, marker='o',s=100, color='red', label='Neuron 800 Mean')
 
     # Set labels and title
     plt.xlabel('Number of Neurons')
     plt.ylabel('Mean Squared Error (MSE)')
-    plt.title('Scatter Plot of Number of Neurons vs MSE')
+    plt.title('Scatter Plot of Number of neurons vs MSE')
     
+    plt.figure(3)
+    plt.scatter(batch_size, mse, marker='o', color='blue')
+    plt.scatter(4, batch4Mean, marker='o',s=100 , color='red', label='Batch Size 04 Mean')
+    plt.scatter(8, batch8Mean, marker='o',s=100, color='red', label='Batch Size 08 Mean')
+    plt.scatter(16, batch16Mean, marker='o',s=100, color='red', label='Batch Size 16 Mean')
 
+    # Set labels and title
+    plt.xlabel('Batch Size')
+    plt.ylabel('Mean Squared Error (MSE)')
+    plt.title('Scatter Plot of Batch Size vs MSE')
+    
+    plt.figure(4)
+    plt.scatter(val_split, mse, marker='o', color='blue')
+    plt.scatter(0, val00Mean, marker='o',s=100 , color='red', label='Validation Split 0.0 Mean')
+    plt.scatter(0.1, val01Mean, marker='o',s=100, color='red', label='Validation Split 0.1 Mean')
+
+    # Set labels and title
+    plt.xlabel('Validation Split')
+    plt.ylabel('Mean Squared Error (MSE)')
+    plt.title('Scatter Plot of Validation Split vs MSE')
 
 
     

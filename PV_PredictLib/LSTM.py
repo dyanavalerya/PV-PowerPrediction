@@ -28,7 +28,7 @@ def fit_LSTM(trainX,trainY,save_file,num_neurons=500,num_layers=3,epochs=10,batc
     model.compile(optimizer='adam', loss='mse')
     model.summary()
     model.fit(trainX, trainY, epochs=epochs, batch_size=batch_size, validation_split=validation_split, verbose=1)
-    model.save('A_lot_of_models2/'+save_file)
+    model.save(save_file)
     return model     
 
 def fit_DNN(trainX,trainY,save_file):
