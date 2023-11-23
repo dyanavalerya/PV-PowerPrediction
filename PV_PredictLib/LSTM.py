@@ -24,7 +24,8 @@ def fit_LSTM(trainX,trainY,save_file,num_neurons=500,num_layers=3,epochs=10,batc
     for i in range(num_layers-1):
         model.add(LSTM(num_neurons, return_sequences=True)) #lstm lag
     model.add(LSTM(num_neurons, return_sequences=False)) #lstm lag
-    model.add(Dense(trainY.shape[1], activation=ReLU(max_value=1.0)))#NN lag
+    #model.add(Dense(trainY.shape[1], activation=ReLU(max_value=1.0)))#NN lag
+    model.add(Dense(trainY.shape[1]))#NN lag
     model.compile(optimizer='adam', loss='mse')
     model.summary()
     model.fit(trainX, trainY, epochs=epochs, batch_size=batch_size, validation_split=validation_split, verbose=1)
@@ -269,8 +270,9 @@ def get_only_day_data(datafile_path,trainY,testY,predictedData):
                 predictedDataDay.append(predictedData[i-len(trainY),:])
     return trainYDay, testYDay, predictedDataDay
 
-def load_LSTM_zero_padded(file_path,station_string):
+def load_LSTM_zero_padded(station_string, n_past=1, n_future=24*4):
     station_file_path=station_string+'.csv'
+    file_path=station_string+'_0_padded.pkl'
 
     if os.path.isfile(file_path):
         print(f'The file {file_path} exists ')
@@ -314,16 +316,18 @@ def load_LSTM_zero_padded(file_path,station_string):
                 for i in range(n_past, len(nwp_data) - n_future+1 ):
                     past=lmd_data.iloc[i - n_past:i, :lmd_data.shape[1]]
                     future=nwp_data.iloc[i:i+n_future, :nwp_data.shape[1]]
-                    past=np.array(past)
-                    past = past.reshape(past.shape[0]*past.shape[1])
-                    future=np.array(future)
-                    future = future.reshape(future.shape[0]*future.shape[1])
+                    # Find the number of missing columns in df1 compared to df2
+                    num_missing_columns = len(future.columns) - len(past.columns)
+                    # Add missing columns to df1 with zero values
+                    for _ in range(num_missing_columns):
+                        column_name = f'Zero_padded_{len(past.columns) + 1}'  # You can customize the column name as needed
+                        past[column_name] = 0
                     combined_data = np.concatenate((past, future), axis=0)
                     X.append(combined_data)
                     Y.append(power_data[i:i+n_future])
                 return np.array(X), np.array(Y)
         
-        x_data,y_data=create_sequences(lmd_data,nwp_data,power_data)
+        x_data,y_data=create_sequences(lmd_data,nwp_data,power_data, n_past=n_past, n_future=n_future)
 
         # Assuming x_data and y_data are your input and output data arrays
         total_samples = x_data.shape[0]
