@@ -16,7 +16,9 @@ import pandas as pd
 import pickle
 import keras
 from matplotlib import pyplot as plt
-
+import tensorflow as tf
+from sklearn.metrics import mean_squared_error as mse
+from sklearn.metrics import r2_score
 
 def fit_LSTM(trainX,trainY,save_file,num_neurons=500,num_layers=3,epochs=10,batch_size=16,validation_split=0.1):    
     model = Sequential()
@@ -351,4 +353,75 @@ def load_LSTM_zero_padded(station_string, n_past=1, n_future=24*4):
 
     return trainX,trainY,testX,testY
 
-    
+
+
+def parameter_grid_search_fit(save_file,trainX, trainY, validation_split= [0,0.1],batch_size = [4,8,16],num_layers = [1,2,3],num_neurons = [100,200,400,800]):
+    """_summary_
+    This functions fits models for all combinations of 
+    the parameters that it is giving in its arguments
+    It will save all the models where the save_file is described
+
+    Args:
+        save_file (string): Where the fitted models should be save
+                            Typically something like "grid_seach_models/"
+        trainX (float): train data features
+        trainY (float): train power actual values
+        validation_split (list, optional): The different validations splits that should be tested. 
+                                           Defaults to [0,0.1].
+        batch_size (list, optional): The different batch sizes that should be tested. 
+                                     Defaults to [4,8,16].
+        num_layers (list, optional): The different amount of layers that should be tested.
+                                     Defaults to [1,2,3].
+        num_neurons (list, optional): The different number of neurons in each layer that should be tested. 
+                                      Defaults to [100,200,400,800].
+    """
+    for i in range(len(validation_split)):
+        for ii in range(len(batch_size)):
+            for iii in range(len(num_layers)):
+                for iiii in range(len(num_neurons)):
+                    fit_save_file = save_file + "val"+str(validation_split[i])+"batch"+str(batch_size[ii])+"lay"+str(num_layers[iii])+"neu"+str(num_neurons[iiii])+ ".keras"
+                    fit_LSTM(trainX,trainY,fit_save_file,num_neurons=num_neurons[iiii],num_layers=num_layers[iii],batch_size=batch_size[ii],validation_split=validation_split[i])
+
+
+
+   
+def parameter_grid_search_prediction(save_file,testX, testY, validation_split= [0,0.1],batch_size = [4,8,16],num_layers = [1,2,3],num_neurons = [100,200,400,800]):
+    """_summary_
+    When the different models is fitted in parameter_grid_search_fit
+    This function can make predictions for the models and save them in
+    a dataframe where the calculated mean squared error and R-squared
+    is included for each parameter combination
+
+    Args:
+        save_file (string): Where the fitted models is saved
+                            Typically something like "grid_seach_models/"
+        testX (float): test data features
+        testY (float): test power actual values
+        validation_split (list, optional): The different validations splits that are in the fitted models. 
+                                           Defaults to [0,0.1].
+        batch_size (list, optional): The different batch sizes that are in the fitted models. 
+                                     Defaults to [4,8,16].
+        num_layers (list, optional): The different amount of layers that are in the fitted models.
+                                     Defaults to [1,2,3].
+        num_neurons (list, optional): The different number of neurons in each layer that are in the fitted models. 
+                                      Defaults to [100,200,400,800].
+    """
+    rows_list = []
+    testY =np.squeeze(testY, axis=(1, 2))
+    for i in range(len(validation_split)):
+        for ii in range(len(batch_size)):
+            for iii in range(len(num_layers)):
+                for iiii in range(len(num_neurons)):
+                    prediction_save_file = save_file + "val" + str(validation_split[i]) + "batch" + str(batch_size[ii]) + "lay" + str(num_layers[iii]) + "neu" + str(num_neurons[iiii]) + ".keras"
+                    reconstructed_LSTM = keras.models.load_model(prediction_save_file)
+                    predLSTM = reconstructed_LSTM.predict(testX)
+                    predLSTM = np.squeeze(predLSTM, axis=1)
+                    mse1 = mse(testY, predLSTM)
+                    R2 = r2_score(testY, predLSTM)
+                    row = {'Validation Split': validation_split[i], 'Batch Size': batch_size[ii],'Num Layers': num_layers[iii], 'Num Neurons': num_neurons[iiii], 'MSE': mse1, 'R-squared': R2}
+                    rows_list.append(row)
+    # Convert the list of rows to a DataFrame
+    diffModelResult = pd.DataFrame(rows_list)
+
+    diffModelResult.to_pickle(f"diffModelResult2.pkl")
+
