@@ -9,28 +9,38 @@ from tensorflow.keras import layers, models
 from keras.models import Sequential
 from keras.layers import LSTM, Dropout, Dense, Conv1D, MaxPooling1D, Flatten, Conv2D,MaxPooling2D,Reshape,ZeroPadding2D,GlobalMaxPooling2D,GRU,Bidirectional
 import pandas as pd
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import MinMaxScaler,StandardScaler
 from PV_PredictLib import fileLoader as fl
 import numpy as np
 import pandas as pd
 import pickle
 import keras
 from matplotlib import pyplot as plt
+from datetime import datetime, timedelta
 
 
-def fit_LSTM(trainX,trainY,save_file,num_neurons=500,num_layers=3,epochs=10,batch_size=16,validation_split=0.1):    
+def fit_LSTM(trainX, trainY, save_file, num_neurons=500, num_layers=3, epochs=10, batch_size=16, validation_split=0.1):
     model = Sequential()
-    model.add(LSTM(num_neurons, input_shape=(trainX.shape[1], trainX.shape[2]), return_sequences=True))#lstm lag
-    for i in range(num_layers-1):
-        model.add(LSTM(num_neurons, return_sequences=True)) #lstm lag
-    model.add(LSTM(num_neurons, return_sequences=False)) #lstm lag
-    #model.add(Dense(trainY.shape[1], activation=ReLU(max_value=1.0)))#NN lag
-    model.add(Dense(trainY.shape[1]))#NN lag
-    model.compile(optimizer='adam', loss='mse')
+    model.add(LSTM(num_neurons, input_shape=(trainX.shape[1], trainX.shape[2]), return_sequences=True)) # LSTM layer
+    for i in range(num_layers - 1):
+        model.add(LSTM(num_neurons, return_sequences=True)) # LSTM layer
+    model.add(LSTM(num_neurons, return_sequences=False)) # LSTM layer
+
+    # Add an output layer with a dynamically determined number of neurons based on trainY.shape[1]
+    #model.add(Dense(1, activation='linear', name='output'))
+    model.add(Dense(trainY.shape[1], activation='linear', name='output'))
+
+    # Compile the model with individual loss functions for each output
+    model.compile(optimizer='RMSprop', loss='mean_squared_error')
+
+    # Display the model summary
     model.summary()
-    model.fit(trainX, trainY, epochs=epochs, batch_size=batch_size, validation_split=validation_split, verbose=1)
+
+    # Assuming you have training data (X_train, trainY)
+    model.fit(trainX, trainY, epochs=epochs, batch_size=batch_size, validation_split=validation_split,verbose=1)
+
     model.save(save_file)
-    return model     
+    return model 
 
 def fit_DNN(trainX,trainY,save_file):
     input_shape = (trainX.shape[1], trainX.shape[2])
@@ -314,17 +324,14 @@ def load_LSTM_zero_padded(station_string, n_past=1, n_future=24*4):
         def create_sequences(lmd_data=None,nwp_data=None,power_data=None, n_past=1, n_future=24*4):
                 X, Y = [], []
                 for i in range(n_past, len(nwp_data) - n_future+1 ):
-                    past=lmd_data.iloc[i - n_past:i, :lmd_data.shape[1]]
+                    lmd=lmd_data.iloc[i - n_past:i, :lmd_data.shape[1]]
                     future=nwp_data.iloc[i:i+n_future, :nwp_data.shape[1]]
-                    # Find the number of missing columns in df1 compared to df2
-                    num_missing_columns = len(future.columns) - len(past.columns)
-                    # Add missing columns to df1 with zero values
-                    for _ in range(num_missing_columns):
-                        column_name = f'Zero_padded_{len(past.columns) + 1}'  # You can customize the column name as needed
-                        past[column_name] = 0
-                    combined_data = np.concatenate((past, future), axis=0)
-                    X.append(combined_data)
-                    Y.append(power_data[i:i+n_future])
+                    power=power_data.iloc[i - n_past:i]
+                    past = pd.merge(lmd, power, left_index=True, right_index=True, how='left')
+                    combined_data = pd.concat([past, future])
+                    combined_data = combined_data.fillna(0)
+                    X.append(combined_data.values)
+                    Y.append(power_data[i:i+n_future].values)
                 return np.array(X), np.array(Y)
         
         x_data,y_data=create_sequences(lmd_data,nwp_data,power_data, n_past=n_past, n_future=n_future)
@@ -351,4 +358,116 @@ def load_LSTM_zero_padded(station_string, n_past=1, n_future=24*4):
 
     return trainX,trainY,testX,testY
 
-    
+def datetime_to_time_of_day(dt):
+    # Extract hour, minute, and second components
+    hours = dt.hour
+    minutes = dt.minute
+    seconds = dt.second
+
+    # Convert to decimal representation
+    time_of_day = hours.values + minutes.values / 60.0 + seconds.values / 3600.0
+
+    #scale
+    time_of_day=time_of_day/24
+
+    # Use vectorized operation to calculate day of the year
+    day_of_year = dt.dayofyear.values
+
+    #scale
+    day_of_year=day_of_year/365
+
+
+
+    return time_of_day, day_of_year
+
+def load_with_time(station_string, n_past=1, n_future=24*4):
+    station_file_path=station_string+'.csv'
+    file_path=station_string+'_0_padded.pkl'
+
+    if os.path.isfile(file_path):
+        print(f'The file {file_path} exists ')
+        with open(file_path, 'rb') as file:
+            trainX = pickle.load(file)
+            trainY = pickle.load(file) 
+            testX = pickle.load(file) 
+            testY = pickle.load(file)
+
+        print('and have been downloaded')
+    else:        
+        # Load the DataFrames
+        data_with_night = fl.loadFile(station_file_path, PKL=False)
+        data_without_night = fl.loadFile(station_file_path, PKL=True)
+
+        #remove colums 
+        data_with_night_cols=remove_cols(data_with_night)
+
+        #scale 
+        scaler = MinMaxScaler()
+        scaler.fit(data_with_night_cols)
+        data_scaled=scaler.transform(data_with_night_cols)
+        df_scaled_night = pd.DataFrame(data_scaled, columns=data_with_night_cols.columns, index=data_with_night_cols.index)
+
+        # Extract the 'date_time' column values from both DataFrames
+        date_time_without_night = data_without_night['date_time']
+
+        # Create boolean masks based on whether 'date_time' values appear in both DataFrames
+        mask_with_night = df_scaled_night.index.isin(date_time_without_night)
+
+        # Set entries to a specific value where 'date_time' values do not appear in both DataFrames
+        df_scaled_night.loc[~mask_with_night, :] = 0
+
+        #split data
+        lmd_data, nwp_data, power_data = split_dataframe_columns(df_scaled_night)
+        #lmd_total,lmd_diffuse,lmd_temp,lmd_windspeed
+        #nwp_global,nwp_direct,nwp,temp,nwp_windspeed
+
+        def create_sequences(lmd_data=None,nwp_data=None,power_data=None, n_past=1, n_future=24*4):
+                X, Y = [], []
+                temp=(len(nwp_data) - n_future+1)
+                for i in range(n_past, len(nwp_data) - n_future+1 ):
+                    lmd=lmd_data.iloc[i - n_past:i, :lmd_data.shape[1]]
+                    future=nwp_data.iloc[i:i+n_future, :nwp_data.shape[1]]
+                    power=power_data.iloc[i - n_past:i]
+                    past = pd.merge(lmd, power, left_index=True, right_index=True, how='left')
+                    past_time,past_day=datetime_to_time_of_day(past.index)
+                    past_df = pd.DataFrame({'time_of_day': past_time, 'day_of_year': past_day})
+                    past['day_of_year'] = past_df['day_of_year'].values
+                    past['time_of_day'] = past_df['time_of_day'].values
+
+
+                    future_time,future_day=datetime_to_time_of_day(future.index)
+                    future_df = pd.DataFrame({'time_of_day': future_time, 'day_of_year': future_day})
+                    future['day_of_year'] = future_df['day_of_year'].values
+                    future['time_of_day'] = future_df['time_of_day'].values
+                        
+
+                    # combined_data = pd.concat([past, future])
+                    # combined_data = combined_data.fillna(0)
+                    combined_data=np.concatenate((future.values,past.values))
+                    X.append(combined_data)
+                    Y.append(power_data[i:i+n_future].values)
+                return np.array(X), np.array(Y)
+        
+        x_data,y_data=create_sequences(lmd_data,nwp_data,power_data, n_past=n_past, n_future=n_future)
+
+        # Assuming x_data and y_data are your input and output data arrays
+        total_samples = x_data.shape[0]
+        split_index = int(0.8 * total_samples)
+
+        # Training data
+        trainX = x_data[:split_index]
+        trainY = y_data[:split_index]
+
+        # Testing data
+        testX = x_data[split_index:]
+        testY = y_data[split_index:]
+
+
+        # Open a file for writing
+        with open(file_path, 'wb') as file:
+            pickle.dump(trainX, file)
+            pickle.dump(trainY, file)
+            pickle.dump(testX, file)
+            pickle.dump(testY, file)
+
+    return trainX,trainY,testX,testY
