@@ -169,3 +169,10 @@ station00LSTM.pkl
 my_model.keras
 Models*.pkl
 my_model.keras
+Tuner_1/
+Tuner_2/
+Tuner/
+CNN_1.keras
+test_LSTM.py
+CNN_test.keras
+station02_0_padded.pkl
