@@ -23,14 +23,14 @@ from sklearn.metrics import r2_score
 
 def fit_LSTM(trainX, trainY, save_file, num_neurons=500, num_layers=3, epochs=10, batch_size=16, validation_split=0.1):
     model = Sequential()
-    model.add(LSTM(num_neurons, input_shape=(trainX.shape[1], trainX.shape[2]), return_sequences=True)) # LSTM layer
+    model.add(LSTM(num_neurons, input_shape=(trainX.shape[1],trainX.shape[2]), return_sequences=True)) # LSTM layer
     for i in range(num_layers - 1):
         model.add(LSTM(num_neurons, return_sequences=True)) # LSTM layer
     model.add(LSTM(num_neurons, return_sequences=False)) # LSTM layer
 
     # Add an output layer with a dynamically determined number of neurons based on trainY.shape[1]
     #model.add(Dense(1, activation='linear', name='output'))
-    model.add(Dense(trainY.shape[1], activation='linear', name='output'))
+    model.add(Dense(1, activation='linear', name='output'))
 
     # Compile the model with individual loss functions for each output
     model.compile(optimizer='RMSprop', loss='mean_squared_error')
@@ -328,7 +328,7 @@ def load_LSTM_zero_padded(station_string, n_past=1, n_future=24*4):
         def create_sequences(lmd_data=None,nwp_data=None,power_data=None, n_past=1, n_future=24*4):
                 X, Y = [], []
                 for i in range(n_past, len(nwp_data) - n_future+1 ):
-                    lmd=lmd_data.iloc[i - n_past:i, :lmd_data.shape[1]]
+                    past=lmd_data.iloc[i - n_past:i, :lmd_data.shape[1]]
                     future=nwp_data.iloc[i:i+n_future, :nwp_data.shape[1]]
                     past_power = power_data[i-n_past:i]
                     past = np.hstack((past,past_power))
