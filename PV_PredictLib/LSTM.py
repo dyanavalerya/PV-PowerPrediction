@@ -22,13 +22,13 @@ from sklearn.metrics import r2_score
 
 def fit_LSTM(trainX,trainY,save_file,num_neurons=500,num_layers=3,epochs=10,batch_size=16,validation_split=0.1):    
     model = Sequential()
-    model.add(LSTM(num_neurons, input_shape=(trainX.shape[1], trainX.shape[2]), return_sequences=True))#lstm lag
+    model.add(LSTM(num_neurons, input_shape=(10,1), return_sequences=True))#lstm lag
     for i in range(num_layers-1):
         model.add(LSTM(num_neurons, return_sequences=True)) #lstm lag
     model.add(LSTM(num_neurons, return_sequences=False)) #lstm lag
     #model.add(Dense(trainY.shape[1], activation=ReLU(max_value=1.0)))#NN lag
-    model.add(Dense(trainY.shape[1]))#NN lag
-    model.compile(optimizer='adam', loss='mse')
+    model.add(Dense(1))#NN lag
+    model.compile(optimizer='SGD', loss='mse')
     model.summary()
     model.fit(trainX, trainY, epochs=epochs, batch_size=batch_size, validation_split=validation_split, verbose=1)
     model.save(save_file)
@@ -141,8 +141,10 @@ def load_LSTM_data(station,cols_to_remove=None,n_future = 24 * 4,n_past = 1):
             if n_past>0:
                 for i in range(n_past, len(nwp_data) - n_future+1 ):
                     past=lmd_data[i - n_past:i, :lmd_data.shape[1]]
+                    past_power = power_data[i-n_past:i]
+                    past = np.hstack((past,past_power))
                     future=nwp_data[i:i+n_future, :nwp_data.shape[1]]
-                    combined_data = np.concatenate((past, future), axis=1)
+                    combined_data = np.concatenate((past, future), axis=0)
                     X.append(combined_data)
                     Y.append(power_data[i:i+n_future])
             else:
@@ -318,12 +320,16 @@ def load_LSTM_zero_padded(station_string, n_past=1, n_future=24*4):
                 for i in range(n_past, len(nwp_data) - n_future+1 ):
                     past=lmd_data.iloc[i - n_past:i, :lmd_data.shape[1]]
                     future=nwp_data.iloc[i:i+n_future, :nwp_data.shape[1]]
+                    past_power = power_data[i-n_past:i]
+                    past = np.hstack((past,past_power))
                     # Find the number of missing columns in df1 compared to df2
+                    """
                     num_missing_columns = len(future.columns) - len(past.columns)
                     # Add missing columns to df1 with zero values
                     for _ in range(num_missing_columns):
                         column_name = f'Zero_padded_{len(past.columns) + 1}'  # You can customize the column name as needed
                         past[column_name] = 0
+                        """
                     combined_data = np.concatenate((past, future), axis=0)
                     X.append(combined_data)
                     Y.append(power_data[i:i+n_future])
@@ -385,7 +391,7 @@ def parameter_grid_search_fit(save_file,trainX, trainY, validation_split= [0,0.1
 
 
    
-def parameter_grid_search_prediction(save_file,testX, testY, validation_split= [0,0.1],batch_size = [4,8,16],num_layers = [1,2,3],num_neurons = [100,200,400,800]):
+def parameter_grid_search_prediction(model_path,save_path,testX, testY, validation_split= [0,0.1],batch_size = [4,8,16],num_layers = [1,2,3],num_neurons = [100,200,400,800]):
     """_summary_
     When the different models is fitted in parameter_grid_search_fit
     This function can make predictions for the models and save them in
@@ -393,8 +399,10 @@ def parameter_grid_search_prediction(save_file,testX, testY, validation_split= [
     is included for each parameter combination
 
     Args:
-        save_file (string): Where the fitted models is saved
-                            Typically something like "grid_seach_models/"
+        model_path (string): Where the fitted models is saved
+                             Typically something like "grid_seach_models/"
+        save_path (string): What the data frame should be called and where it should be saved
+                            E.g. "search_grid_dataframe"
         testX (float): test data features
         testY (float): test power actual values
         validation_split (list, optional): The different validations splits that are in the fitted models. 
@@ -406,16 +414,20 @@ def parameter_grid_search_prediction(save_file,testX, testY, validation_split= [
         num_neurons (list, optional): The different number of neurons in each layer that are in the fitted models. 
                                       Defaults to [100,200,400,800].
     """
+    non_zero_indices = np.nonzero(testY)[0]
+    testY = testY[non_zero_indices]
+    
     rows_list = []
     testY =np.squeeze(testY, axis=(1, 2))
     for i in range(len(validation_split)):
         for ii in range(len(batch_size)):
             for iii in range(len(num_layers)):
                 for iiii in range(len(num_neurons)):
-                    prediction_save_file = save_file + "val" + str(validation_split[i]) + "batch" + str(batch_size[ii]) + "lay" + str(num_layers[iii]) + "neu" + str(num_neurons[iiii]) + ".keras"
+                    prediction_save_file = model_path + "val" + str(validation_split[i]) + "batch" + str(batch_size[ii]) + "lay" + str(num_layers[iii]) + "neu" + str(num_neurons[iiii]) + ".keras"
                     reconstructed_LSTM = keras.models.load_model(prediction_save_file)
                     predLSTM = reconstructed_LSTM.predict(testX)
                     predLSTM = np.squeeze(predLSTM, axis=1)
+                    predLSTM = predLSTM[non_zero_indices]
                     mse1 = mse(testY, predLSTM)
                     R2 = r2_score(testY, predLSTM)
                     row = {'Validation Split': validation_split[i], 'Batch Size': batch_size[ii],'Num Layers': num_layers[iii], 'Num Neurons': num_neurons[iiii], 'MSE': mse1, 'R-squared': R2}
@@ -423,5 +435,5 @@ def parameter_grid_search_prediction(save_file,testX, testY, validation_split= [
     # Convert the list of rows to a DataFrame
     diffModelResult = pd.DataFrame(rows_list)
 
-    diffModelResult.to_pickle(f"diffModelResult2.pkl")
+    diffModelResult.to_pickle(save_path+".pkl")
 
