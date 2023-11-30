@@ -52,16 +52,16 @@ def fit_DNN(trainX,trainY,save_file):
 
     # Add layers to the model
     model.add(layers.Flatten(input_shape=input_shape))  # Flatten the input
-    model.add(layers.Dense(1000, activation='relu'))      # Dense layer with 128 units and ReLU activation                      # Dropout layer for regularization
-    model.add(layers.Dense(1000, activation='relu'))       # Another Dense layer with 64 units and ReLU activation
-    model.add(layers.Dense(1000, activation='relu'))       # Another Dense layer with 64 units and ReLU activation
+    model.add(layers.Dense(500, activation='relu'))      # Dense layer with 128 units and ReLU activation                      # Dropout layer for regularization
+    model.add(layers.Dense(500, activation='relu'))       # Another Dense layer with 64 units and ReLU activation
+    model.add(layers.Dense(500, activation='relu'))       # Another Dense layer with 64 units and ReLU activation
     model.add(layers.Dense(trainY.shape[1], activation='relu'))    # Output layer with 10 units for classification (adjust as needed)
 
     # Compile the model
     model.compile(optimizer='adam', loss='mse')
     # Display the model summary
     model.summary()
-    model.fit(trainX, trainY, epochs=10, batch_size=16, validation_split=0.1, verbose=1)
+    model.fit(trainX, trainY, epochs=35, batch_size=16, validation_split=0.1, verbose=1)
     model.save(save_file)
     return model     
 
@@ -369,8 +369,6 @@ def load_LSTM_zero_padded(station_string, n_past=1, n_future=24*4):
 
     return trainX,trainY,testX,testY
 
-
-
 def parameter_grid_search_fit(save_file,trainX, trainY, validation_split= [0,0.1],batch_size = [4,8,16],num_layers = [1,2,3],num_neurons = [100,200,400,800]):
     """_summary_
     This functions fits models for all combinations of 
@@ -398,9 +396,6 @@ def parameter_grid_search_fit(save_file,trainX, trainY, validation_split= [0,0.1
                     fit_save_file = save_file + "val"+str(validation_split[i])+"batch"+str(batch_size[ii])+"lay"+str(num_layers[iii])+"neu"+str(num_neurons[iiii])+ ".keras"
                     fit_LSTM(trainX,trainY,fit_save_file,num_neurons=num_neurons[iiii],num_layers=num_layers[iii],batch_size=batch_size[ii],validation_split=validation_split[i])
 
-
-
-   
 def parameter_grid_search_prediction(model_path,save_path,testX, testY, validation_split= [0,0.1],batch_size = [4,8,16],num_layers = [1,2,3],num_neurons = [100,200,400,800]):
     """_summary_
     When the different models is fitted in parameter_grid_search_fit
@@ -538,6 +533,107 @@ def load_with_time(station_string, n_past=1, n_future=24*4):
                 return np.array(X), np.array(Y)
         
         x_data,y_data=create_sequences(lmd_data,nwp_data,power_data, n_past=n_past, n_future=n_future)
+
+        # Assuming x_data and y_data are your input and output data arrays
+        total_samples = x_data.shape[0]
+        split_index = int(0.8 * total_samples)
+
+        # Training data
+        trainX = x_data[:split_index]
+        trainY = y_data[:split_index]
+
+        # Testing data
+        testX = x_data[split_index:]
+        testY = y_data[split_index:]
+
+
+        # Open a file for writing
+        with open(file_path, 'wb') as file:
+            pickle.dump(trainX, file)
+            pickle.dump(trainY, file)
+            pickle.dump(testX, file)
+            pickle.dump(testY, file)
+
+    return trainX,trainY,testX,testY
+
+def load_data_daily_pred(station_string, n_past=1, n_future=24*4,time='00:00:00'):
+    # Convert string to datetime object
+    original_time = datetime.strptime(time, '%H:%M:%S')
+    # Add 8 hours
+    new_time = original_time + timedelta(hours=8)
+    # Format the new time as a string
+    time = new_time.strftime('%H:%M:%S')
+
+    station_file_path=station_string+'.csv'
+    file_path=station_string+'_0_padded.pkl'
+
+    if os.path.isfile(file_path):
+        print(f'The file {file_path} exists ')
+        with open(file_path, 'rb') as file:
+            trainX = pickle.load(file)
+            trainY = pickle.load(file) 
+            testX = pickle.load(file) 
+            testY = pickle.load(file)
+
+        print('and have been downloaded')
+    else:        
+        # Load the DataFrames
+        data_with_night = fl.loadFile(station_file_path, PKL=False)
+        data_without_night = fl.loadFile(station_file_path, PKL=True)
+
+        #remove colums 
+        data_with_night_cols=remove_cols(data_with_night)
+
+        #scale 
+        scaler = MinMaxScaler()
+        scaler.fit(data_with_night_cols)
+        data_scaled=scaler.transform(data_with_night_cols)
+        df_scaled_night = pd.DataFrame(data_scaled, columns=data_with_night_cols.columns, index=data_with_night_cols.index)
+
+        # Extract the 'date_time' column values from both DataFrames
+        date_time_without_night = data_without_night['date_time']
+
+        # Create boolean masks based on whether 'date_time' values appear in both DataFrames
+        mask_with_night = df_scaled_night.index.isin(date_time_without_night)
+
+        # Set entries to a specific value where 'date_time' values do not appear in both DataFrames
+        df_scaled_night.loc[~mask_with_night, :] = 0
+
+        #split data
+        lmd_data, nwp_data, power_data = split_dataframe_columns(df_scaled_night)
+        #lmd_total,lmd_diffuse,lmd_temp,lmd_windspeed
+        #nwp_global,nwp_direct,nwp,temp,nwp_windspeed
+
+        def create_sequences(lmd_data=None,nwp_data=None,power_data=None, n_past=1, n_future=24*4,time='00:00:00'):
+                occurrence_index=lmd_data.index.indexer_at_time(time)
+                X, Y = [], []
+                for index_value in occurrence_index:
+                    if index_value >= n_past and len(power_data)-index_value>=n_future:
+                        lmd=lmd_data.iloc[index_value - n_past+1:index_value+1,:]
+                        future=nwp_data.iloc[index_value+1:index_value+n_future+1,:]
+                        power=power_data.iloc[index_value - n_past+1:index_value+1,0]
+
+                        past = pd.merge(lmd, power, left_index=True, right_index=True, how='left')
+                        past_time,past_day=datetime_to_time_of_day(past.index)
+                        past_df = pd.DataFrame({'time_of_day': past_time, 'day_of_year': past_day})
+                        past['day_of_year'] = past_df['day_of_year'].values
+                        past['time_of_day'] = past_df['time_of_day'].values
+
+                        future_time,future_day=datetime_to_time_of_day(future.index)
+                        future_df = pd.DataFrame({'time_of_day': future_time, 'day_of_year': future_day})
+                        future['day_of_year'] = future_df['day_of_year'].values
+                        future['time_of_day'] = future_df['time_of_day'].values
+                            
+
+                        # combined_data = pd.concat([past, future])
+                        # combined_data = combined_data.fillna(0)
+                        combined_data=np.concatenate((future.values,past.values))
+                        X.append(combined_data)
+                        Y.append(power_data[index_value+1:index_value+n_future+1].values)
+                
+                return np.array(X), np.array(Y)
+        
+        x_data,y_data=create_sequences(lmd_data,nwp_data,power_data, n_past=n_past, n_future=n_future,time=time)
 
         # Assuming x_data and y_data are your input and output data arrays
         total_samples = x_data.shape[0]
