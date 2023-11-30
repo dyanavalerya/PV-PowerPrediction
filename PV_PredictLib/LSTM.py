@@ -61,7 +61,7 @@ def fit_DNN(trainX,trainY,save_file):
     model.compile(optimizer='adam', loss='mse')
     # Display the model summary
     model.summary()
-    model.fit(trainX, trainY, epochs=35, batch_size=16, validation_split=0.1, verbose=1)
+    model.fit(trainX, trainY, epochs=10, batch_size=16, validation_split=0.1, verbose=1)
     model.save(save_file)
     return model     
 
