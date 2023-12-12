@@ -95,38 +95,11 @@ def load_CNN_data(station, cols_to_remove=None, n_future=24 * 4, n_past=1):
 
     return trainX, trainY, testX, testY
 
-def fit_CNN(trainX, trainY, save_file, num_neurons=300, epochs = 3, validation_split = 0.1):
-    # input must be of shape [batch_size, time_steps, input_dimension]
-    n_timesteps = trainX.shape[1]  # 1
-    n_features = trainX.shape[2]  # 5
-    model = keras.Sequential(name="model_conv1D")
-    model.add(keras.layers.Input(shape=(n_timesteps, n_features)))
-    # filters is the nr. of neurons
-    # kernel size here is 1D because of the type of CNN, which is Conv1D
-    model.add(keras.layers.Conv1D(filters=num_neurons, kernel_size=40, activation='relu', name="Conv1D_1"))
-    model.add(keras.layers.MaxPooling1D(pool_size=2))
-    model.add(keras.layers.Conv1D(filters=100, kernel_size=13, activation='relu', name="Conv1D_2"))
-    model.add(keras.layers.Dropout(0.5))
-
-    model.add(keras.layers.MaxPooling1D(pool_size=1))
-    model.add(keras.layers.Flatten())
-    # model.add(keras.layers.Dense(32, activation='relu', name="Dense_1"))
-    # We want to pass in 1 because this is the output layer and we only want to predict one thing which is power
-    # Otherwise if we predict 24 hrs ahead for each time step, then we have 96 values that the Dense layer should output
-    model.add(keras.layers.Dense(trainY.shape[1], name="Dense_2"))
-
-    optimizer = tf.keras.optimizers.RMSprop(0.001)
-
-    model.compile(loss='mse', optimizer=optimizer, metrics=['mae', 'accuracy'])
-    model.fit(trainX, trainY, epochs=epochs,
-              validation_split=validation_split, verbose=1)
-    model.save(save_file)
-    return model
 
 def fit_CNN_tune(hp):
     # input must be of shape [batch_size, time_steps, input_dimension]
     #trainX_reshaped = trainX.reshape(trainX.shape[0], trainX.shape[1], 1)
-    n_timesteps = trainX.shape[1]  # 104
+    n_timesteps = trainX.shape[1]  # 192
     n_features = trainX.shape[2]  # 5
     model = keras.Sequential(name="model_conv1D")
     model.add(keras.layers.Input(shape=(n_timesteps, n_features)))
@@ -135,17 +108,17 @@ def fit_CNN_tune(hp):
     # model.add(keras.layers.Conv1D(hp.Int('conv1_units', min_value=300, max_value=500, step=16),
     #                               kernel_size=21, activation='relu', name="Conv1D_1"))
     model.add(keras.layers.Conv1D(filters=364, kernel_size=hp.Int('kernel1_size', min_value=13, max_value=41, step=3),
-                                  dilation_rate=2, activation='relu', name="Conv1D_1"))
+                                  padding="causal", dilation_rate=2, activation='relu', name="Conv1D_1"))
 
     model.add(keras.layers.MaxPooling1D(hp.Int('pool1_size', min_value=1, max_value=3, step=1)))
 
-    model.add(keras.layers.Conv1D(filters=126, kernel_size=hp.Int('kernel2_size', min_value=3, max_value=21, step=3),
-                                  dilation_rate=2, activation='relu', name="Conv1D_2"))
-    model.add(keras.layers.Dropout(0.5))
+    model.add(keras.layers.Conv1D(filters=126, kernel_size=hp.Int('kernel2_size', min_value=5, max_value=21, step=3),
+                                  padding="causal", dilation_rate=2, activation='relu', name="Conv1D_2"))
 
     model.add(keras.layers.MaxPooling1D(hp.Int('pool2_size', min_value=1, max_value=3, step=1)))
     model.add(keras.layers.Flatten())
     model.add(keras.layers.Dense(hp.Int('filter1_size', min_value=10, max_value=600, step=90), activation='relu', name="Dense_1"))
+    model.add(keras.layers.Dropout(0.5))
     model.add(keras.layers.Dense(hp.Int('filter2_size', min_value=10, max_value=300, step=50), activation='relu', name="Dense_2"))
     model.add(keras.layers.Dense(hp.Int('filter3_size', min_value=10, max_value=600, step=80), activation='relu', name="Dense_3"))
     # We want to pass in 1 because this is the output layer, and we only want to predict one thing which is power
@@ -159,71 +132,8 @@ def fit_CNN_tune(hp):
 
     # model.fit(trainX, trainY, epochs=epochs,
     #           validation_split=validation_split, verbose=1)
-    model.save('CNN_test.keras')
+    model.save('CNN_test2.keras')
     return model
-
-def fit_CNN_bayes_optimization(hyperparameters):
-    # Extract hyperparameters
-    learning_rate = hyperparameters['learning_rate']
-    dropout_rate = hyperparameters['dropout_rate']
-    filters = hyperparameters['filters']
-    kernels = hyperparameters['kernels']
-    pooling_size = hyperparameters['pooling_size']
-    dense_units = hyperparameters['dense_units']
-
-    # input must be of shape [batch_size, time_steps, input_dimension]
-    n_timesteps = trainX.shape[1]  # 104
-    n_features = trainX.shape[2]  # 5
-    model = keras.Sequential(name="model_conv1D")
-    model.add(keras.layers.Input(shape=(n_timesteps, n_features)))
-    # filters is the nr. of neurons
-    # kernel size here is 1D because of the type of CNN, which is Conv1D
-    # model.add(keras.layers.Conv1D(hp.Int('conv1_units', min_value=300, max_value=500, step=16),
-    #                               kernel_size=21, activation='relu', name="Conv1D_1"))
-    model.add(keras.layers.Conv1D(filters, kernels, activation='relu', name="Conv1D_1"))
-
-    model.add(keras.layers.MaxPooling1D(pooling_size))
-
-    model.add(keras.layers.Conv1D(filters, kernels, activation='relu', name="Conv1D_2"))
-    model.add(keras.layers.Dropout(dropout_rate))
-
-    model.add(keras.layers.MaxPooling1D(pooling_size))
-    model.add(keras.layers.Flatten())
-    model.add(keras.layers.Dense(dense_units, activation='relu', name="Dense_1"))
-    model.add(keras.layers.Dense(dense_units, activation='relu', name="Dense_2"))
-    model.add(keras.layers.Dense(dense_units, activation='relu', name="Dense_3"))
-    # We want to pass in 1 because this is the output layer, and we only want to predict one thing which is power
-    # Otherwise if we predict 24 hrs ahead for each time step, then we have 96 values that the Dense layer should output
-    model.add(keras.layers.Dense(trainY.shape[1], name="Dense_4"))
-
-    optimizer = tf.keras.optimizers.RMSprop(learning_rate)
-
-    model.compile(loss='mse', optimizer=optimizer, metrics=['mae', 'accuracy'])
-    model.save('CNN_test.keras')
-    return model
-
-
-# Define the model-building class
-class CNNModelWrapper(BaseEstimator, RegressorMixin):
-    def __init__(self, hyperparameters=None):
-        self.hyperparameters = hyperparameters
-        self.model = None
-
-    def fit(self, X, y):
-        # Build and compile the LSTM model using the provided hyperparameters
-        model = KerasRegressor(build_fn=lambda: fit_CNN_bayes_optimization(
-            self.hyperparameters),
-            epochs=10,
-            batch_size=64,
-            verbose=0
-        )
-
-        # Train the model on the provided data
-        self.model.fit(X, y)
-        return self
-
-    def predict(self, X):
-        return self.model.predict(X)
 
 def plot_history(history):
   plt.figure()
@@ -236,6 +146,28 @@ def plot_history(history):
   plt.legend()
   plt.ylim([0, max(history.history['val_mae'])])
   plt.savefig('hist.png')
+
+
+def remove_night_predictions_one_timestep(testY_zero, y_pred):
+    zero_indices = []
+
+    i = 0
+    temp = testY_zero[:, i, 0]
+    # Create a mask for zero values
+    zero_mask = (temp == 0)
+
+    # Get the indices where the values are zero
+    zero_indices = (np.where(zero_mask)[0])
+
+    y_test_list_day = []
+    y_pred_day = []
+
+    # Use fancy indexing to remove rows at zero_indices
+    y_test_list_day = np.delete(testY[:, i], zero_indices, axis=0)
+
+    y_pred_day = np.delete(y_pred, zero_indices, axis=0)
+
+    return y_test_list_day, y_pred_day
 
 
 def main():
@@ -262,72 +194,57 @@ def main():
         directory='Tuner',  # Directory to save results
         project_name='CNN_hp')  # Project name
 
+
     # Search for the best hyperparameters
     #tuner.search(trainX, trainY[0], epochs=3, validation_split=0.2)
-    tuner.search(trainX, trainY[0].reshape(trainY[0].shape[1], trainY[0].shape[0]), epochs=2, validation_split=0.2)
+    # trainY[:, 1] get all time steps values for only 15 min ahead
 
-    # Get the best parameters
-    best_hps = tuner.get_best_hyperparameters(num_trials=1)[0]
+    predictions_list = []
+    testY_day_list = []
+    r2_list = []
+    mse_list = []
+    for i in range(96):
+        tuner.reload()
+        best_hps = tuner.get_best_models(num_models=3)
+        # tuner.search(trainX, trainY[:, i], epochs=2, validation_split=0.2)
 
-    # Build and train the final model
-    final_model = tuner.hypermodel.build(best_hps)
-    history = final_model.fit(trainX, trainY[0], batch_size=64, epochs=10, validation_split=0.2, verbose=1)
+        # Get the best parameters
+        # best_hps = tuner.get_best_hyperparameters(num_trials=1)[0]
 
-    # Plot the history of training and validation error
-    # The further they are from each other, the more the model is over fitting the train data
-    plot_history(history)
+        # Build and train the final model
+        final_model = tuner.hypermodel.build(best_hps)
+        history = final_model.fit(trainX, trainY[:, i], batch_size=64, epochs=15, validation_split=0.2, verbose=1)
 
-    # Evaluate the model
-    eval_result = final_model.evaluate(testX, testY)
+        # Plot the history of training and validation error
+        # The further they are from each other, the more the model is over fitting the train data
+        plot_history(history)
 
-    # _________________________This uses Bayesian optimization for hyperparameter estimation________________________
-    # Define the search space
-    # param_space = {
-    #     'learning_rate': (1e-6, 1e-2, 'log-uniform'),
-    #     'dropout_rate': (0.0, 0.5),
-    #     'filters': (16, 256),
-    #     'kernels': (3, 21),
-    #     'pooling_size': (1, 5),
-    #     'dense_units': (16, 350)
-    # }
-    #
-    # cnn_model_wrapper = CNNModelWrapper()
-    # # Perform Bayesian Optimization
-    # bayes_search = BayesSearchCV(
-    #     estimator=cnn_model_wrapper,
-    #     search_spaces=param_space,
-    #     n_iter=10,  # Number of iterations (adjust as needed)
-    #     cv=TimeSeriesSplit(n_splits=3),
-    #     n_jobs=-1,  # Use all available CPUs
-    #     verbose=1
-    # )
-    #
-    # bayes_search.fit(trainX, trainY)
-    #
-    # # Get the best hyperparameters
-    # best_params = bayes_search.best_params_
-    # print("Best Hyperparameters:", best_params)
-    #
-    # # Train the final model
-    # final_model = fit_CNN_bayes_optimization(**best_params)
-    # final_model.fit(trainX, trainY, epochs=10, validation_split=0.2)
-    #
-    # # Evaluate the final model
-    # eval_result = final_model.evaluate(testX, testY)
+        # Evaluate the model
+        eval_result = final_model.evaluate(testX, testY)
 
-    print("Test accuracy:", eval_result[1])
-    print("Test mae:", eval_result[0])
+        print("Test accuracy:", eval_result[1])
+        print("Test mae:", eval_result[0])
 
-    power_predictions = final_model.predict(testX)
-    r2 = r2_score(testY[0], power_predictions)
-    mse = mean_squared_error(testY[0], power_predictions)
-    #r2 = r2_score(testY.reshape(testY.shape[0], testY.shape[1]), power_predictions)
-    #mse = mean_squared_error(testY.reshape(testY.shape[0], testY.shape[1]), power_predictions)
+        power_predictions = final_model.predict(testX)
 
-    print('R2 score: ', r2)
-    print('MSE: ', mse)
-    #cnn_model = fit_CNN(trainX, trainY, 'CNN_test.keras')
-    #cnn_model = keras.models.load_model('./CNN_test.keras')
+        # Remove night data from the predictions
+        testY_day, power_pred_day = remove_night_predictions_one_timestep(testY, power_predictions)
+        predictions_list.append(power_pred_day)
+        testY_day_list.append(testY_day)
+
+        r2 = r2_score(testY[:, i], power_predictions)
+        mse = mean_squared_error(testY[:, i], power_predictions)
+
+        r2_day = r2_score(testY_day, power_pred_day)
+        mse_day = mean_squared_error(testY_day, power_pred_day)
+        r2_list.append(r2_day)
+        mse_list.append(mse_day)
+
+        print('R2 score: ', r2)
+        print('MSE: ', mse)
+
+        print('R2 score day: ', r2_day)
+        print('MSE day : ', mse_day)
 
     # plt.figure()
     # plt.scatter(testY, power_predictions.flatten())
@@ -342,12 +259,31 @@ def main():
     # n = 95 is predicting 24 hrs ahead
     n = 0
     plt.figure()
-    plt.plot(testY[0], label='true value')
-    plt.plot(power_predictions, label='predicted')
+    testY_day_array = np.asarray(testY_day_list)
+    testY_day_array = testY_day_array.reshape(testY_day_array.shape[1], testY_day_array.shape[0])
+    plt.plot(testY_day_list[0], label='true value')
+    predictions_array = np.asarray(predictions_list).reshape(np.asarray(predictions_list).shape[1], np.asarray(predictions_list).shape[0])
+    plt.plot(predictions_list[95], label='predicted')
     # plt.plot(testY.reshape(testY.shape[0], testY.shape[1])[:, n], label='true value')
     # plt.plot(power_predictions[:, n], label='predicted')
     plt.legend()
     plt.savefig('Pred_vs_true.png')
+    plt.show()
+
+    plt.figure()
+    plt.plot(r2_list)
+    plt.title('R2 score for day data')
+    plt.xlabel('Time steps')
+    plt.ylabel('R2')
+    plt.savefig('r2_score.png')
+    plt.show()
+
+    plt.figure()
+    plt.plot(mse_list)
+    plt.title('Minimum Squared Error for day data')
+    plt.ylabel('MSE')
+    plt.xlabel('Time steps')
+    plt.savefig('mse.png')
     plt.show()
 
     print('test')
