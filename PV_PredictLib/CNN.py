@@ -148,10 +148,9 @@ def plot_history(history):
   plt.savefig('hist.png')
 
 
-def remove_night_predictions_one_timestep(testY_zero, y_pred):
+def remove_night_predictions_one_timestep(testY_zero, i, y_pred):
     zero_indices = []
 
-    i = 0
     temp = testY_zero[:, i, 0]
     # Create a mask for zero values
     zero_mask = (temp == 0)
@@ -203,24 +202,25 @@ def main():
     testY_day_list = []
     r2_list = []
     mse_list = []
+
     for i in range(96):
-        tuner.reload()
-        best_hps = tuner.get_best_models(num_models=3)
-        # tuner.search(trainX, trainY[:, i], epochs=2, validation_split=0.2)
+        # tuner.reload()
+        # best_hps = tuner.get_best_models(num_models=3)
+        tuner.search(trainX, trainY[:, i], epochs=3, validation_split=0.2)
 
         # Get the best parameters
-        # best_hps = tuner.get_best_hyperparameters(num_trials=1)[0]
+        best_hps = tuner.get_best_hyperparameters(num_trials=1)[0]
 
         # Build and train the final model
         final_model = tuner.hypermodel.build(best_hps)
-        history = final_model.fit(trainX, trainY[:, i], batch_size=64, epochs=15, validation_split=0.2, verbose=1)
+        history = final_model.fit(trainX, trainY[:, i], batch_size=64, epochs=1, validation_split=0.2, verbose=1)
 
         # Plot the history of training and validation error
         # The further they are from each other, the more the model is over fitting the train data
-        plot_history(history)
+        # plot_history(history)
 
         # Evaluate the model
-        eval_result = final_model.evaluate(testX, testY)
+        eval_result = final_model.evaluate(testX, testY[:, i])
 
         print("Test accuracy:", eval_result[1])
         print("Test mae:", eval_result[0])
@@ -228,7 +228,14 @@ def main():
         power_predictions = final_model.predict(testX)
 
         # Remove night data from the predictions
-        testY_day, power_pred_day = remove_night_predictions_one_timestep(testY, power_predictions)
+        non_zero_indices = np.nonzero(testY[:, i])[0]
+        testY_day = testY[:, i][non_zero_indices]
+
+        power_pred_day = np.squeeze(power_predictions, axis=1)
+        power_pred_day = power_pred_day[non_zero_indices]
+        power_pred_day = np.expand_dims(np.asarray(power_pred_day), axis=1)
+
+        # testY_day, power_pred_day = remove_night_predictions_one_timestep(testY, i, power_predictions)
         predictions_list.append(power_pred_day)
         testY_day_list.append(testY_day)
 
