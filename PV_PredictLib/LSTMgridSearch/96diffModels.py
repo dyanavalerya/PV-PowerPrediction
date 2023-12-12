@@ -12,6 +12,10 @@ from matplotlib import pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error as mse
 from sklearn.metrics import r2_score
+os.environ["TF_FORCE_GPU_ALLOW_GROWTH"]="true"
+strategy = TF.distribute.MirroredStrategy(
+    cross_device_ops=TF.distribute.HierarchicalCopyAllReduce()
+)
 
 def split_dataframe_columns(df):
     """
@@ -203,29 +207,30 @@ def load_with_time(station_string, n_past=1, n_future=24*4):
     return trainX,trainY,testX,testY
 
 def fit_LSTM(trainX, trainY, save_file, num_neurons=100, num_layers=1, epochs=10, batch_size=16, validation_split=0,learning_rate=0.001, optimizer=['RMSdrop','Adam']):
-    model = TF.keras.Sequential()
-    model.add(TF.keras.layers.LSTM(num_neurons, input_shape=(trainX.shape[1],trainX.shape[2]), return_sequences=True)) # LSTM layer
-    for i in range(num_layers - 1):
-        model.add(TF.keras.layers.LSTM(num_neurons, return_sequences=True)) # LSTM layer
-    model.add(TF.keras.layers.LSTM(num_neurons, return_sequences=False)) # LSTM layer
+    with strategy.scope():
+        model = TF.keras.Sequential()
+        model.add(TF.keras.layers.LSTM(num_neurons, input_shape=(trainX.shape[1],trainX.shape[2]), return_sequences=True,kernel_initializer= TF.keras.initializers.RandomNormal(mean=0.0, stddev=0.05, seed=7))) # LSTM layer
+        model.add(TF.keras.layers.LSTM(num_neurons, return_sequences=True, kernel_initializer= TF.keras.initializers.RandomNormal(mean=0.0, stddev=0.05, seed=8))) # LSTM layer
+        model.add(TF.keras.layers.LSTM(num_neurons, return_sequences=True, kernel_initializer= TF.keras.initializers.RandomNormal(mean=0.0, stddev=0.05, seed=9))) # LSTM layer
+        model.add(TF.keras.layers.LSTM(num_neurons, return_sequences=False,kernel_initializer= TF.keras.initializers.RandomNormal(mean=0.0, stddev=0.05, seed=10))) # LSTM layer
 
-    # Add an output layer with a dynamically determined number of neurons based on trainY.shape[1]
-    #model.add(Dense(1, activation='linear', name='output'))
-    model.add(TF.keras.layers.Dense(1, activation='linear', name='output'))
-    if optimizer == 'RMSprop':
-        optimizer = keras.optimizers.RMSprop(lr=learning_rate)
-    else:
-        optimizer = keras.optimizers.RMSprop(lr=learning_rate)
-    # Compile the model with individual loss functions for each output
-    model.compile(optimizer=optimizer, loss='mean_squared_error')
+        # Add an output layer with a dynamically determined number of neurons based on trainY.shape[1]
+        #model.add(Dense(1, activation='linear', name='output'))
+        model.add(TF.keras.layers.Dense(1, activation='linear', name='output'))
+        if optimizer == 'RMSprop':
+            optimizer = keras.optimizers.RMSprop(lr=learning_rate)
+        else:
+            optimizer = keras.optimizers.RMSprop(lr=learning_rate)
+        # Compile the model with individual loss functions for each output
+        model.compile(optimizer=optimizer, loss='mean_squared_error')
 
-    # Display the model summary
-    model.summary()
+        # Display the model summary
+        model.summary()
 
-    # Assuming you have training data (X_train, trainY)
-    model.fit(trainX, trainY, epochs=epochs, batch_size=batch_size, validation_split=validation_split,verbose=1)
+        # Assuming you have training data (X_train, trainY)
+        model.fit(trainX, trainY, epochs=epochs, batch_size=batch_size, validation_split=validation_split,verbose=1)
 
-    model.save(save_file)
+        model.save(save_file)
     return model 
 
 def parameter_grid_search_fit(save_file,trainX, trainY, learning_rate = [0.01,0.001,0.0001],optimizer = ['adam', 'RMSprop'],num_layers = [1,2,3],num_neurons = [100,200,400,800],model_nr=0):
@@ -297,14 +302,14 @@ datafile_path = 'station01'
 
 trainX,trainY,testX,testY=load_with_time(datafile_path,96,96)
 
-learning_rate = 0.0001
-optimizer = 'Adam' 
-num_layers = 1
-num_neurons = 50
+learning_rate = 0.001
+optimizer = 'RMSprop' 
+num_layers = 3
+num_neurons = 100
 
 save_file = ""
-#for i in range(96):
-#    parameter_grid_search_fit(save_file,trainX,trainY[:,i,0],learning_rate=learning_rate,optimizer=optimizer,num_layers=num_layers,num_neurons=num_neurons,model_nr=i)
+for i in range(96):
+    parameter_grid_search_fit(save_file,trainX,trainY[:,i,0],learning_rate=learning_rate,optimizer=optimizer,num_layers=num_layers,num_neurons=num_neurons,model_nr=i)
 
 save_name="96ModelsResults"
 

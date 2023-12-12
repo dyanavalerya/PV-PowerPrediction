@@ -119,7 +119,7 @@ for i in range(192):
 mse_array = np.array(mse)
 R_2_array = np.array(R_2)
 
-time_steps_hours = np.arange(0, 48, 0.25)
+time_steps_hours = np.arange(0, 24, 0.25)
 
 # Create subplots
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 8))

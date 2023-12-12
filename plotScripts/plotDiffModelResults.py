@@ -20,19 +20,20 @@ from scipy.interpolate import griddata
 
 def main():
     # Importing results
-    file_path = "/Users/jakob/Desktop/gridSearchResults.pkl"
+    file_path = "/Users/jakob/Desktop/JakobTemp/JakobTemp1Layers/gridSearchResults1.pkl"
     temp = open(file_path, 'rb')
     df1 = pickle.load(temp)
     temp.close()
-    df1 = df1.sort_values(by='MSE')
-    file_path = "/Users/jakob/Desktop/gridSearchResults100/gridSearchResults100.pkl"
+    file_path = "/Users/jakob/Desktop/JakobTemp/JakobTemp2Layers/gridSearchResults2.pkl"
     temp = open(file_path, 'rb')
     df2 = pickle.load(temp)
     temp.close()
-    file_path = "/Users/jakob/Desktop/gridSearchResults100/gridSearchResults200.pkl"
+    file_path = "/Users/jakob/Desktop/JakobTemp/JakobTemp3Layers/gridSearchResults3.pkl"
     temp = open(file_path, 'rb')
     df3 = pickle.load(temp)
     temp.close()
+    combined_df = pd.concat([df1, df2, df3], ignore_index=True)
+    combined_df = combined_df.sort_values(by='MSE')
     file_path = "/Users/jakob/Desktop/gridSearchResults100/gridSearchResults400.pkl"
     temp = open(file_path, 'rb')
     df4 = pickle.load(temp)
