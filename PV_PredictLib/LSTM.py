@@ -21,7 +21,7 @@ import tensorflow as tf
 from sklearn.metrics import mean_squared_error as mse
 from sklearn.metrics import r2_score
 
-def fit_LSTM(trainX, trainY, save_file, num_neurons=500, num_layers=3, epochs=10, batch_size=16, validation_split=0.1):
+def fit_LSTM(trainX, trainY, save_file, num_neurons=100, num_layers=1, epochs=10, batch_size=16, validation_split=0,learning_rate=0.001,optimizer='adam'):
     model = Sequential()
     model.add(LSTM(num_neurons, input_shape=(trainX.shape[1],trainX.shape[2]), return_sequences=True)) # LSTM layer
     for i in range(num_layers - 1):
@@ -33,7 +33,7 @@ def fit_LSTM(trainX, trainY, save_file, num_neurons=500, num_layers=3, epochs=10
     model.add(Dense(1, activation='linear', name='output'))
 
     # Compile the model with individual loss functions for each output
-    model.compile(optimizer='RMSprop', loss='mean_squared_error')
+    model.compile(optimizer=optimizer, loss='mean_squared_error',learning_rate=learning_rate)
 
     # Display the model summary
     model.summary()
@@ -369,7 +369,7 @@ def load_LSTM_zero_padded(station_string, n_past=1, n_future=24*4):
 
     return trainX,trainY,testX,testY
 
-def parameter_grid_search_fit(save_file,trainX, trainY, validation_split= [0,0.1],batch_size = [4,8,16],num_layers = [1,2,3],num_neurons = [100,200,400,800]):
+def parameter_grid_search_fit(save_file,trainX, trainY, learning_rate = [0.01,0.001,0.0001],optimizer = ['adam', 'RMSprop'],num_layers = [1,2,3],num_neurons = [100,200,400,800]):
     """_summary_
     This functions fits models for all combinations of 
     the parameters that it is giving in its arguments
@@ -389,14 +389,14 @@ def parameter_grid_search_fit(save_file,trainX, trainY, validation_split= [0,0.1
         num_neurons (list, optional): The different number of neurons in each layer that should be tested. 
                                       Defaults to [100,200,400,800].
     """
-    for i in range(len(validation_split)):
-        for ii in range(len(batch_size)):
+    for i in range(len(optimizer)):
+        for ii in range(len(learning_rate)):
             for iii in range(len(num_layers)):
                 for iiii in range(len(num_neurons)):
-                    fit_save_file = save_file + "val"+str(validation_split[i])+"batch"+str(batch_size[ii])+"lay"+str(num_layers[iii])+"neu"+str(num_neurons[iiii])+ ".keras"
-                    fit_LSTM(trainX,trainY,fit_save_file,num_neurons=num_neurons[iiii],num_layers=num_layers[iii],batch_size=batch_size[ii],validation_split=validation_split[i])
+                    fit_save_file = save_file + "optimizer"+str(optimizer[i])+"learnRate"+str(learning_rate[ii])+"lay"+str(num_layers[iii])+"neu"+str(num_neurons[iiii])+ ".keras"
+                    fit_LSTM(trainX,trainY,fit_save_file,num_neurons=num_neurons[iiii],num_layers=num_layers[iii],learning_rate=learning_rate[ii],optimizer=optimizer[i])
 
-def parameter_grid_search_prediction(model_path,save_path,testX, testY, validation_split= [0,0.1],batch_size = [4,8,16],num_layers = [1,2,3],num_neurons = [100,200,400,800]):
+def parameter_grid_search_prediction(model_path,save_name,testX, testY, learning_rate = [0.01,0.001,0.0001],optimizer = ['adam', 'RMSprop'],num_layers = [1,2,3],num_neurons = [100,200,400,800]):
     """_summary_
     When the different models is fitted in parameter_grid_search_fit
     This function can make predictions for the models and save them in
@@ -406,7 +406,7 @@ def parameter_grid_search_prediction(model_path,save_path,testX, testY, validati
     Args:
         model_path (string): Where the fitted models is saved
                              Typically something like "grid_seach_models/"
-        save_path (string): What the data frame should be called and where it should be saved
+        save_name (string): What the data frame should be called and where it should be saved
                             E.g. "search_grid_dataframe"
         testX (float): test data features
         testY (float): test power actual values
@@ -424,23 +424,23 @@ def parameter_grid_search_prediction(model_path,save_path,testX, testY, validati
     
     rows_list = []
     testY =np.squeeze(testY, axis=(1, 2))
-    for i in range(len(validation_split)):
-        for ii in range(len(batch_size)):
+    for i in range(len(optimizer)):
+        for ii in range(len(learning_rate)):
             for iii in range(len(num_layers)):
                 for iiii in range(len(num_neurons)):
-                    prediction_save_file = model_path + "val" + str(validation_split[i]) + "batch" + str(batch_size[ii]) + "lay" + str(num_layers[iii]) + "neu" + str(num_neurons[iiii]) + ".keras"
+                    prediction_save_file = model_path + "optimizer" + str(optimizer[i]) + "learnRate" + str(learning_rate[ii]) + "lay" + str(num_layers[iii]) + "neu" + str(num_neurons[iiii]) + ".keras"
                     reconstructed_LSTM = keras.models.load_model(prediction_save_file)
                     predLSTM = reconstructed_LSTM.predict(testX)
                     predLSTM = np.squeeze(predLSTM, axis=1)
                     predLSTM = predLSTM[non_zero_indices]
                     mse1 = mse(testY, predLSTM)
                     R2 = r2_score(testY, predLSTM)
-                    row = {'Validation Split': validation_split[i], 'Batch Size': batch_size[ii],'Num Layers': num_layers[iii], 'Num Neurons': num_neurons[iiii], 'MSE': mse1, 'R-squared': R2}
+                    row = {'Optimizer': optimizer[i], 'Learning Rate': learning_rate[ii],'Num Layers': num_layers[iii], 'Num Neurons': num_neurons[iiii], 'MSE': mse1, 'R-squared': R2}
                     rows_list.append(row)
     # Convert the list of rows to a DataFrame
     diffModelResult = pd.DataFrame(rows_list)
 
-    diffModelResult.to_pickle(save_path+".pkl")
+    diffModelResult.to_pickle(save_name+".pkl")
 
 def datetime_to_time_of_day(dt):
     # Extract hour, minute, and second components
