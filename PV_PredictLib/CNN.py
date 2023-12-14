@@ -19,7 +19,8 @@ from sklearn.model_selection import TimeSeriesSplit
 from sklearn.base import BaseEstimator, RegressorMixin
 from keras.wrappers.scikit_learn import KerasRegressor
 
-trainX, trainY, testX, testY = LS.load_LSTM_zero_padded('station02', 24 * 4, 24 * 4)
+#trainX, trainY, testX, testY = LS.load_LSTM_zero_padded('station02', 24 * 4, 24 * 4)
+trainX, trainY, testX, testY = LS.load_with_time('station01', 24 * 4, 24 * 4)
 
 def load_CNN_data(station, cols_to_remove=None, n_future=24 * 4, n_past=1):
     station_name = os.path.splitext(station)[0]
@@ -100,7 +101,7 @@ def fit_CNN_tune(hp):
     # input must be of shape [batch_size, time_steps, input_dimension]
     #trainX_reshaped = trainX.reshape(trainX.shape[0], trainX.shape[1], 1)
     n_timesteps = trainX.shape[1]  # 192
-    n_features = trainX.shape[2]  # 5
+    n_features = trainX.shape[2]  # 7
     model = keras.Sequential(name="model_conv1D")
     model.add(keras.layers.Input(shape=(n_timesteps, n_features)))
     # filters is the nr. of neurons
@@ -170,11 +171,11 @@ def remove_night_predictions_one_timestep(testY_zero, i, y_pred):
 
 
 def main():
-    datafile_path = 'station02.pkl'
+    datafile_path = 'station01.pkl'
 
     # load data
-    cols_to_remove = ['nwp_winddirection', 'lmd_winddirection', 'lmd_pressure', 'station',
-                      'lmd_hmd_directirrad', 'nwp_hmd_diffuseirrad', 'nwp_pressure']
+    # cols_to_remove = ['nwp_winddirection', 'lmd_winddirection', 'lmd_pressure', 'station',
+    #                   'lmd_hmd_directirrad', 'nwp_hmd_diffuseirrad', 'nwp_pressure']
 
     # From Y = G(X), where Y is the true data, and X the input. In this case we have X containing NWP data used to make
     # the prediction and Y is the true power data, taken from LMD
@@ -189,7 +190,7 @@ def main():
     tuner = RandomSearch(
         fit_CNN_tune,  # Model-building function
         objective='val_accuracy',  # Metric to optimize
-        max_trials=3,  # Number of different hyperparameter combinations to try
+        max_trials=50,  # Number of different hyperparameter combinations to try
         directory='Tuner',  # Directory to save results
         project_name='CNN_hp')  # Project name
 
@@ -202,18 +203,19 @@ def main():
     testY_day_list = []
     r2_list = []
     mse_list = []
-
+    i = 95
     for i in range(96):
-        # tuner.reload()
-        # best_hps = tuner.get_best_models(num_models=3)
-        tuner.search(trainX, trainY[:, i], epochs=3, validation_split=0.2)
+        tuner.reload()
+        # Retrieve the best performing model
+        best_model = tuner.get_best_models(num_models=1)
+        # tuner.search(trainX, trainY[:, i], epochs=3, validation_split=0.2)
 
         # Get the best parameters
-        best_hps = tuner.get_best_hyperparameters(num_trials=1)[0]
+        best_hps = tuner.get_best_hyperparameters(num_trials=100)[0]
 
         # Build and train the final model
         final_model = tuner.hypermodel.build(best_hps)
-        history = final_model.fit(trainX, trainY[:, i], batch_size=64, epochs=1, validation_split=0.2, verbose=1)
+        history = final_model.fit(trainX, trainY[:, i], batch_size=64, epochs=15, validation_split=0.2, verbose=1)
 
         # Plot the history of training and validation error
         # The further they are from each other, the more the model is over fitting the train data
@@ -268,7 +270,7 @@ def main():
     plt.figure()
     testY_day_array = np.asarray(testY_day_list)
     testY_day_array = testY_day_array.reshape(testY_day_array.shape[1], testY_day_array.shape[0])
-    plt.plot(testY_day_list[0], label='true value')
+    plt.plot(testY_day_list[95], label='true value')
     predictions_array = np.asarray(predictions_list).reshape(np.asarray(predictions_list).shape[1], np.asarray(predictions_list).shape[0])
     plt.plot(predictions_list[95], label='predicted')
     # plt.plot(testY.reshape(testY.shape[0], testY.shape[1])[:, n], label='true value')
