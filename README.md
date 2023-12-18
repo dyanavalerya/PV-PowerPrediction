@@ -6,7 +6,7 @@
 
 #### Project description
 The goal of this project is to predict photovoltaic (PV) power using past (Local Measured Data) and future (Numerical Weather Predictions) data. The methods used are:
-- Linear regression
+- Linear Regression
 - Support Vector Regression
 - Long Short Term Memory Neural Network
 - 1D Convolutional Neural Network
