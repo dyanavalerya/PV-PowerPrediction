@@ -16,9 +16,9 @@ The goal of this project is to predict photovoltaic (PV) power using past (Local
 #### Result
 The Minimum Squared Error (MSE) and the coefficient of determination $R^2$ metrics are used to compare the models. 
 
-![Click to see image| 150](DynamicModelCompare.png)
+![Click to see image| 50](DynamicModelCompare.png)
 
 One of the NWP features - the global irradiance is highly correlated with power. This figure explains parts of the reason for not achieving highly accurate predictions, as the predictions seem to mimic the NWP feature.
-![Click to see image| 150](NWP_comparisoFull.png)
+![Click to see image| 50](NWP_comparisoFull.png)
 In the next figure this assumption is further confirmed, by analyzing the difference between power and global irradiance, SVR, LSTM, and CNN predictions.
-![Click to see image| 150](NWP_uncertanty.png)
+![Click to see image| 50](NWP_uncertanty.png)
