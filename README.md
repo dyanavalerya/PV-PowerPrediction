@@ -1,10 +1,10 @@
 # PV Power Prediction
 
-#### Objectives
+### Objectives
 - Become familiar with machine learning principles
 - Be able to analyse and handle large amounts of data
 
-#### Project description
+### Project description
 The goal of this project is to predict photovoltaic (PV) power using past (Local Measured Data) and future (Numerical Weather Predictions) data. The methods used are:
 - Linear Regression
 - Support Vector Regression
@@ -13,7 +13,7 @@ The goal of this project is to predict photovoltaic (PV) power using past (Local
 
 **Used tools:** Python, MATLAB, TensorFlow
 
-#### Result
+### Result
 The Minimum Squared Error (MSE) and the coefficient of determination $R^2$ metrics are used to compare the models. 
 
 ![Click to see image| 50](DynamicModelCompare.png)
